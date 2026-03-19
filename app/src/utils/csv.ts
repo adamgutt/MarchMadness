@@ -219,10 +219,13 @@ export function buildGameIndex(brackets: Record<string, BracketData>): {
 
   for (const [person, data] of Object.entries(brackets)) {
     for (const g of data.games) {
-      const key = getGameKey(g.team1, g.team2);
-      if (!gameMap[key]) {
-        gameMap[key] = {
-          key,
+      const teamKey = getGameKey(g.team1, g.team2);
+      // Use round + team pair as dedup key so same teams in different rounds don't collide
+      // (e.g., Arizona vs Michigan in both Final Four and Championship)
+      const dedupKey = g.round + '|' + teamKey;
+      if (!gameMap[dedupKey]) {
+        gameMap[dedupKey] = {
+          key: teamKey,
           team1: g.team1,
           team2: g.team2,
           round: g.round,
@@ -232,7 +235,7 @@ export function buildGameIndex(brackets: Record<string, BracketData>): {
           picks: {},
         };
       }
-      gameMap[key].picks[person] = g.pick;
+      gameMap[dedupKey].picks[person] = g.pick;
     }
   }
 
@@ -253,9 +256,6 @@ export function getScores(
   results: Record<string, GameResult>
 ): Record<string, PersonScore> {
   const scores: Record<string, PersonScore> = {};
-  for (const person of Object.keys(brackets)) {
-    scores[person] = { correct: 0, incorrect: 0, pending: 0, total: 0, points: 0, maxPoints: 0 };
-  }
 
   const pointsByRound: Record<string, number> = {};
   for (const r of rounds) {
@@ -281,29 +281,34 @@ export function getScores(
     }
   }
 
-  for (const game of games) {
-    const result = results[game.key];
-    const pts = pointsByRound[game.round] || 1;
+  // Score each bracket from its OWN game list to avoid cross-round key collisions
+  // (e.g., a bracket's Championship "A vs B" colliding with its FF "A vs B")
+  for (const [person, data] of Object.entries(brackets)) {
+    const score: PersonScore = { correct: 0, incorrect: 0, pending: 0, total: 0, points: 0, maxPoints: 0 };
 
-    for (const [person, pick] of Object.entries(game.picks)) {
-      if (!scores[person]) continue;
-      scores[person].total++;
+    for (const g of data.games) {
+      const key = getGameKey(g.team1, g.team2);
+      const result = results[key];
+      const pts = pointsByRound[g.round] || 1;
+
+      score.total++;
       if (result?.winner) {
-        if (normalizeTeamName(pick) === normalizeTeamName(result.winner)) {
-          scores[person].correct++;
-          scores[person].points += pts;
-          scores[person].maxPoints += pts;
+        if (normalizeTeamName(g.pick) === normalizeTeamName(result.winner)) {
+          score.correct++;
+          score.points += pts;
+          score.maxPoints += pts;
         } else {
-          scores[person].incorrect++;
+          score.incorrect++;
         }
       } else {
-        scores[person].pending++;
-        // Pick is still possible if the team hasn't been eliminated
-        if (!eliminatedTeams.has(normalizeTeamName(pick))) {
-          scores[person].maxPoints += pts;
+        score.pending++;
+        if (!eliminatedTeams.has(normalizeTeamName(g.pick))) {
+          score.maxPoints += pts;
         }
       }
     }
+
+    scores[person] = score;
   }
 
   return scores;

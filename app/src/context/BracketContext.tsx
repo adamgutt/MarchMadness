@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { BracketData, BracketEntry, Game, GameResult, PersonScore } from '../types';
-import { loadBracketCSV, loadResultsFromText, buildGameIndex, getScores, getGameKey } from '../utils/csv';
+import { loadBracketCSV, loadResultsFromText, buildGameIndex, getScores, getGameKey, normalizeTeamName } from '../utils/csv';
+import { fetchLiveScores, LiveGame, matchLiveGame } from '../utils/liveScores';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -21,6 +22,7 @@ interface BracketState {
   filteredGames: Game[];
   filteredScores: Record<string, PersonScore>;
   activeBrackets: Record<string, BracketData>; // filtered + not muted
+  liveGames: LiveGame[];
   addBracket: (name: string, person: string, pool: string, filename: string, text: string) => void;
   removeBracket: (name: string) => void;
   toggleMute: (name: string) => void;
@@ -47,6 +49,7 @@ export function BracketProvider({ children }: { children: ReactNode }) {
   const [games, setGames] = useState<Game[]>([]);
   const [rounds, setRounds] = useState<string[]>([]);
   const [scores, setScores] = useState<Record<string, PersonScore>>({});
+  const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const loadedFromFirestore = useRef(false);
   const skipNextSync = useRef(false);
 
@@ -209,11 +212,58 @@ export function BracketProvider({ children }: { children: ReactNode }) {
       .catch(err => console.warn('Firestore clear failed', err));
   }, []);
 
+  // Live scores polling + auto-grading
+  useEffect(() => {
+    let active = true;
+
+    async function poll() {
+      try {
+        const live = await fetchLiveScores();
+        if (!active) return;
+        setLiveGames(live);
+
+        // Auto-grade completed games
+        const newResults: Record<string, { winner: string; round: string }> = {};
+        for (const lg of live) {
+          if (lg.status !== 'post' || !lg.winner) continue;
+          // Try to match against our games
+          for (const game of games) {
+            const match = matchLiveGame(lg, game.team1, game.team2);
+            if (match) {
+              const key = getGameKey(game.team1, game.team2);
+              // Only auto-grade if we don't already have a result for this game
+              if (!results[key]) {
+                // Map winner name to match our team names
+                const winnerNorm = normalizeTeamName(match.winner!);
+                const t1Norm = normalizeTeamName(game.team1);
+                const t2Norm = normalizeTeamName(game.team2);
+                const winner = winnerNorm === t1Norm ? game.team1 : winnerNorm === t2Norm ? game.team2 : match.winner!;
+                newResults[key] = { winner, round: game.round };
+              }
+            }
+          }
+        }
+
+        if (Object.keys(newResults).length > 0) {
+          setResults(prev => ({ ...prev, ...newResults }));
+        }
+      } catch (err) {
+        console.warn('Live scores fetch failed:', err);
+      }
+    }
+
+    // Poll immediately, then every 30 seconds
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => { active = false; clearInterval(interval); };
+  }, [games, results]);
+
   return (
     <BracketContext.Provider value={{
       brackets, entries, results, games, rounds, scores, pools,
       selectedPool, setSelectedPool,
       filteredBrackets, filteredGames, filteredScores, activeBrackets,
+      liveGames,
       addBracket, removeBracket, toggleMute, applyResults, setResult, clearResult, clearAll,
     }}>
       {children}

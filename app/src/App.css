@@ -703,6 +703,51 @@ header p {
 .slot-card:hover { border-color: var(--accent); }
 .slot-card.slot-decided { border-left: 2px solid var(--green); }
 
+/* Live game styling */
+.slot-card.slot-live {
+  border-left: 2px solid #ef4444;
+  animation: live-pulse 2s ease-in-out infinite;
+  position: relative;
+}
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 6px 1px rgba(239, 68, 68, 0.3); }
+}
+.live-badge {
+  position: absolute;
+  top: -6px;
+  right: 4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+.slot-score {
+  font-weight: 700;
+  color: #fbbf24;
+  font-size: 0.75rem;
+  margin-left: auto;
+  min-width: 18px;
+  text-align: right;
+}
+/* When both score and count are present, score pulls left, count stays right */
+.slot-score + .slot-count {
+  margin-left: 4px;
+  padding-left: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+.slot-live-status {
+  text-align: center;
+  font-size: 0.5rem;
+  color: #ef4444;
+  padding: 1px 0;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
 .slot-team {
   display: flex;
   align-items: center;
@@ -800,6 +845,7 @@ header p {
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 .detail-round {
   font-weight: 700;
@@ -812,6 +858,47 @@ header p {
   background: #253545;
   padding: 0.1rem 0.5rem;
   border-radius: 4px;
+}
+.detail-live-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ef4444;
+  animation: live-text-pulse 1.5s ease-in-out infinite;
+}
+@keyframes live-text-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.detail-pre-badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.detail-live-scoreboard {
+  background: #1a2a3a;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+}
+.live-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+.live-score-row + .live-score-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.live-score-team {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.live-score-num {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fbbf24;
+  min-width: 30px;
+  text-align: right;
 }
 
 .detail-matchup {
