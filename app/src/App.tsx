@@ -116,7 +116,7 @@ function MainApp() {
   const navItems: { key: Page; label: string }[] = [
     { key: 'bracket', label: 'Bracket' },
     { key: 'leaderboard', label: 'Leaderboard' },
-    { key: 'person', label: 'By Person' },
+    // { key: 'person', label: 'By Person' },
   ];
 
   return (
