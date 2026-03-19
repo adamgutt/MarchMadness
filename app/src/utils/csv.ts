@@ -254,7 +254,7 @@ export function getScores(
 ): Record<string, PersonScore> {
   const scores: Record<string, PersonScore> = {};
   for (const person of Object.keys(brackets)) {
-    scores[person] = { correct: 0, incorrect: 0, pending: 0, total: 0, points: 0 };
+    scores[person] = { correct: 0, incorrect: 0, pending: 0, total: 0, points: 0, maxPoints: 0 };
   }
 
   const pointsByRound: Record<string, number> = {};
@@ -268,6 +268,19 @@ export function getScores(
     else pointsByRound[r] = 32;
   }
 
+  // Build set of eliminated teams (losers of decided games)
+  const eliminatedTeams = new Set<string>();
+  for (const game of games) {
+    const result = results[game.key];
+    if (result?.winner) {
+      const winnerNorm = normalizeTeamName(result.winner);
+      const t1Norm = normalizeTeamName(game.team1);
+      const t2Norm = normalizeTeamName(game.team2);
+      const loser = winnerNorm === t1Norm ? t2Norm : t1Norm;
+      eliminatedTeams.add(loser);
+    }
+  }
+
   for (const game of games) {
     const result = results[game.key];
     const pts = pointsByRound[game.round] || 1;
@@ -279,11 +292,16 @@ export function getScores(
         if (normalizeTeamName(pick) === normalizeTeamName(result.winner)) {
           scores[person].correct++;
           scores[person].points += pts;
+          scores[person].maxPoints += pts;
         } else {
           scores[person].incorrect++;
         }
       } else {
         scores[person].pending++;
+        // Pick is still possible if the team hasn't been eliminated
+        if (!eliminatedTeams.has(normalizeTeamName(pick))) {
+          scores[person].maxPoints += pts;
+        }
       }
     }
   }

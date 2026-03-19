@@ -22,6 +22,7 @@ export function Leaderboard({ onViewBracket }: LeaderboardProps) {
           <th>Rank</th>
           <th>Name</th>
           <th>Points</th>
+          <th>Max</th>
           <th>Correct</th>
           <th>Wrong</th>
           <th>Pending</th>
@@ -49,6 +50,7 @@ export function Leaderboard({ onViewBracket }: LeaderboardProps) {
                 {poolLabel && <span className="pool-badge">{poolLabel}</span>}
               </td>
               <td style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.points}</td>
+              <td className="max-points">{s.maxPoints}</td>
               <td className="correct">{s.correct}</td>
               <td className="incorrect">{s.incorrect}</td>
               <td className="pending">{s.pending}</td>

@@ -492,6 +492,7 @@ header p {
 .correct { color: var(--green); }
 .incorrect { color: var(--red); }
 .pending { color: var(--muted); }
+.max-points { color: var(--accent2); font-size: 0.85rem; }
 
 /* ===== Person View ===== */
 .person-select {

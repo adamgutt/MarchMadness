@@ -42,6 +42,7 @@ export interface PersonScore {
   pending: number;
   total: number;
   points: number;
+  maxPoints: number; // current points + max still earnable
 }
 
 // Slot in the visual bracket — represents one game position
