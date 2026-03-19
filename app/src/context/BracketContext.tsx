@@ -26,6 +26,7 @@ interface BracketState {
   toggleMute: (name: string) => void;
   applyResults: (text: string) => void;
   setResult: (team1: string, team2: string, winner: string, round: string) => void;
+  clearResult: (team1: string, team2: string) => void;
   clearAll: () => void;
 }
 
@@ -188,6 +189,15 @@ export function BracketProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const clearResult = useCallback((team1: string, team2: string) => {
+    setResults(prev => {
+      const key = getGameKey(team1, team2);
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   const clearAll = useCallback(() => {
     setBrackets({});
     setResults({});
@@ -204,7 +214,7 @@ export function BracketProvider({ children }: { children: ReactNode }) {
       brackets, entries, results, games, rounds, scores, pools,
       selectedPool, setSelectedPool,
       filteredBrackets, filteredGames, filteredScores, activeBrackets,
-      addBracket, removeBracket, toggleMute, applyResults, setResult, clearAll,
+      addBracket, removeBracket, toggleMute, applyResults, setResult, clearResult, clearAll,
     }}>
       {children}
     </BracketContext.Provider>

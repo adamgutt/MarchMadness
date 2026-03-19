@@ -6,7 +6,7 @@ import { BracketSlot } from '../types';
 const ROUND_ORDER = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8', 'Final Four', 'Championship'];
 
 export function GradingPage() {
-  const { activeBrackets, results, brackets, setResult } = useBrackets();
+  const { activeBrackets, results, brackets, setResult, clearResult } = useBrackets();
   const [activeRound, setActiveRound] = useState(0);
 
   const bracket = useMemo(
@@ -28,6 +28,11 @@ export function GradingPage() {
   const handleSetWinner = (slot: BracketSlot, winner: string) => {
     if (!slot.topTeam || !slot.bottomTeam) return;
     setResult(slot.topTeam, slot.bottomTeam, winner, slot.round);
+  };
+
+  const handleClearWinner = (slot: BracketSlot) => {
+    if (!slot.topTeam || !slot.bottomTeam) return;
+    clearResult(slot.topTeam, slot.bottomTeam);
   };
 
   const decidedCount = slotsByRound.flat().filter(s => s.winner).length;
@@ -61,16 +66,17 @@ export function GradingPage() {
 
       <div className="grading-games">
         {slotsByRound[activeRound]?.map(slot => (
-          <GradeCard key={slot.slotId} slot={slot} onSetWinner={handleSetWinner} />
+          <GradeCard key={slot.slotId} slot={slot} onSetWinner={handleSetWinner} onClearWinner={handleClearWinner} />
         ))}
       </div>
     </div>
   );
 }
 
-function GradeCard({ slot, onSetWinner }: {
+function GradeCard({ slot, onSetWinner, onClearWinner }: {
   slot: BracketSlot;
   onSetWinner: (slot: BracketSlot, winner: string) => void;
+  onClearWinner: (slot: BracketSlot) => void;
 }) {
   const hasBoth = slot.topTeam && slot.bottomTeam;
   const topWon = slot.winner === slot.topTeam;
@@ -98,6 +104,9 @@ function GradeCard({ slot, onSetWinner }: {
           <span className="grade-name">{slot.bottomTeam || 'TBD'}</span>
         </button>
       </div>
+      {slot.winner && (
+        <button className="grade-clear" onClick={() => onClearWinner(slot)}>✕ Clear</button>
+      )}
     </div>
   );
 }

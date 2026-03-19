@@ -1011,6 +1011,22 @@ header p {
 .grade-card.grade-decided {
   border-left: 3px solid var(--green);
 }
+.grade-clear {
+  display: block;
+  margin: 0.4rem auto 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.grade-clear:hover {
+  color: var(--red, #ef476f);
+  background: rgba(239, 71, 111, 0.1);
+}
 .grade-region {
   font-size: 0.7rem;
   color: var(--muted);
