@@ -2,14 +2,21 @@ import { useBrackets } from '../context/BracketContext';
 
 interface LeaderboardProps {
   onViewBracket?: (bracketName: string) => void;
+  selectedPerson?: string;
 }
 
-export function Leaderboard({ onViewBracket }: LeaderboardProps) {
+export function Leaderboard({ onViewBracket, selectedPerson }: LeaderboardProps) {
   const { filteredScores, entries, selectedPool } = useBrackets();
 
-  const sorted = Object.entries(filteredScores).sort(
-    (a, b) => b[1].points - a[1].points || b[1].correct - a[1].correct
-  );
+  const sorted = Object.entries(filteredScores)
+    .filter(([name]) => {
+      if (!selectedPerson) return true;
+      const entry = entries.find(e => e.name === name);
+      return entry?.person === selectedPerson;
+    })
+    .sort(
+      (a, b) => b[1].points - a[1].points || b[1].correct - a[1].correct
+    );
 
   if (sorted.length === 0) {
     return <div className="empty-state"><p>No brackets loaded.</p></div>;

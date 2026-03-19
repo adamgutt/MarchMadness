@@ -163,12 +163,20 @@ function SlotCard({ slot, onSelect, compact, isPersonView }: {
 
   const pickStatusClass = slot.pickStatus || '';
 
+  // In person view, color the picked team by pick status instead of actual winner
+  const topClass = isPersonView
+    ? (topIsPick ? `team-pick-${pickStatusClass}` : '')
+    : `${topWon ? 'team-won' : ''} ${hasResult && !topWon ? 'team-lost' : ''}`;
+  const bottomClass = isPersonView
+    ? (bottomIsPick ? `team-pick-${pickStatusClass}` : '')
+    : `${bottomWon ? 'team-won' : ''} ${hasResult && !bottomWon ? 'team-lost' : ''}`;
+
   return (
     <div
       className={`slot-card ${compact ? 'slot-compact' : ''} ${hasResult ? 'slot-decided' : ''} ${isPersonView ? 'slot-person' : ''} ${isPersonView ? `slot-pick-${pickStatusClass}` : ''}`}
       onClick={() => onSelect(slot)}
     >
-      <div className={`slot-team slot-top ${topWon ? 'team-won' : ''} ${hasResult && !topWon ? 'team-lost' : ''} ${topIsPick ? 'team-picked' : ''}`}>
+      <div className={`slot-team slot-top ${topClass} ${topIsPick ? 'team-picked' : ''}`}>
         <span className="slot-seed">{slot.topSeed}</span>
         <span className="slot-name">{slot.topTeam || 'TBD'}</span>
         {!isPersonView && total > 0 && (
@@ -178,7 +186,7 @@ function SlotCard({ slot, onSelect, compact, isPersonView }: {
         )}
         {topIsPick && <span className="pick-marker">◄</span>}
       </div>
-      <div className={`slot-team slot-bottom ${bottomWon ? 'team-won' : ''} ${hasResult && !bottomWon ? 'team-lost' : ''} ${bottomIsPick ? 'team-picked' : ''}`}>
+      <div className={`slot-team slot-bottom ${bottomClass} ${bottomIsPick ? 'team-picked' : ''}`}>
         <span className="slot-seed">{slot.bottomSeed}</span>
         <span className="slot-name">{slot.bottomTeam || 'TBD'}</span>
         {!isPersonView && total > 0 && (

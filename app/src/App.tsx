@@ -163,7 +163,7 @@ function MainApp() {
 
       {page === 'leaderboard' && (
         <div className="container">
-          {hasBrackets ? <Leaderboard onViewBracket={handleViewBracket} /> : (
+          {hasBrackets ? <Leaderboard onViewBracket={handleViewBracket} selectedPerson={selectedPerson} /> : (
             <div className="empty-state"><h3>Upload brackets first</h3></div>
           )}
         </div>

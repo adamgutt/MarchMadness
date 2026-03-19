@@ -1180,6 +1180,19 @@ header p {
 .slot-person .team-picked {
   font-weight: 700;
 }
+/* Per-team pick status colors (applied directly to picked team row) */
+.team-pick-correct {
+  background: rgba(6, 214, 160, 0.1);
+}
+.team-pick-correct .slot-name {
+  color: var(--green);
+}
+.team-pick-incorrect {
+  background: rgba(239, 71, 111, 0.1);
+}
+.team-pick-incorrect .slot-name {
+  color: var(--red);
+}
 .slot-pick-correct .team-picked {
   background: rgba(6, 214, 160, 0.1);
 }
@@ -1200,6 +1213,8 @@ header p {
 }
 .slot-pick-correct .team-picked .pick-marker { color: var(--green); }
 .slot-pick-incorrect .team-picked .pick-marker { color: var(--red); }
+.team-pick-correct .pick-marker { color: var(--green); }
+.team-pick-incorrect .pick-marker { color: var(--red); }
 
 .slot-pick-correct {
   border-left: 2px solid var(--green) !important;

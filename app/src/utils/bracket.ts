@@ -362,6 +362,18 @@ export function buildPersonBracket(
     };
   }
 
+  // Build set of eliminated teams from all results
+  const eliminatedTeams = new Set<string>();
+  for (const key of Object.keys(results)) {
+    const result = results[key];
+    if (!result?.winner) continue;
+    const parts = key.split(' vs ');
+    if (parts.length === 2) {
+      const loser = norm(parts[0]) === norm(result.winner) ? parts[1] : parts[0];
+      eliminatedTeams.add(norm(loser));
+    }
+  }
+
   // Build lookup: round+region+teams -> person's pick
   function findPick(round: string, region: string, team1: string | null, team2: string | null): string | null {
     if (!team1 && !team2) return null;
@@ -379,8 +391,12 @@ export function buildPersonBracket(
     if (!pick || !team1 || !team2) return null;
     const key = getGameKey(team1, team2);
     const result = results[key];
-    if (!result?.winner) return 'pending';
-    return norm(result.winner) === norm(pick) ? 'correct' : 'incorrect';
+    if (result?.winner) {
+      return norm(result.winner) === norm(pick) ? 'correct' : 'incorrect';
+    }
+    // Game hasn't been played — but if the picked team is already eliminated, mark incorrect
+    if (eliminatedTeams.has(norm(pick))) return 'incorrect';
+    return 'pending';
   }
 
   function getWinner(team1: string, team2: string): string | null {
