@@ -578,12 +578,12 @@ header p {
   margin: 0 auto;
   padding: 1rem 1.5rem 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
   gap: 1rem;
 }
 .toolbar .stats-grid {
-  flex: 1;
+  width: 100%;
   margin-bottom: 0;
 }
 .toolbar .pool-filter {
@@ -909,6 +909,34 @@ header p {
   border-radius: 3px;
   font-size: 0.7rem;
   color: var(--text);
+}
+
+/* Eliminated pickers section */
+.detail-eliminated {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.detail-eliminated-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #ef4444;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+.eliminated-icon {
+  font-size: 0.9rem;
+}
+.picker-tag-eliminated {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+.eliminated-team {
+  opacity: 0.7;
+  font-style: italic;
 }
 
 /* ===== Mobile Round Tabs ===== */
@@ -1279,4 +1307,174 @@ header p {
   .person-banner { justify-content: center; }
   .cascading-filter { flex-direction: column; align-items: stretch; }
   .filter-select { min-width: unset; width: 100%; }
+}
+
+/* ===== Pool Info Page ===== */
+.pool-info {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0 3rem;
+}
+.pool-info h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+.pool-subtitle {
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.info-section {
+  margin-bottom: 2rem;
+}
+.info-section h3 {
+  font-size: 1.15rem;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.section-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 107, 53, 0.15);
+  color: var(--accent);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.login-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.8rem;
+}
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+.login-card h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.login-platform {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(100, 200, 255, 0.12);
+  color: var(--accent2);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+.login-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: -0.25rem 0 0.4rem;
+}
+.login-field {
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+  word-break: break-all;
+}
+.login-field span {
+  color: var(--muted);
+  margin-right: 0.3rem;
+}
+.info-callout {
+  background: rgba(255, 107, 53, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 0.8rem 1rem;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+.callout-small {
+  font-size: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.tier-block {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+}
+.tier-block h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+}
+.tier-condition {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0.4rem 0;
+}
+.sub-header {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 1.2rem 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.split-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.split-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+}
+.split-row span {
+  min-width: 70px;
+  font-weight: 700;
+  color: var(--accent2);
+  font-size: 0.85rem;
+}
+.lay-breakdown {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+}
+.lay-breakdown h5 {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 0 0 0.3rem;
+}
+.lay-breakdown .split-row span {
+  color: var(--muted);
+  font-weight: 600;
+}
+.pool-detail {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+}
+.lay-example {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  font-size: 0.85rem;
+  margin-top: 0.6rem;
+}
+.lay-example ul {
+  margin: 0.3rem 0 0 1.2rem;
+  padding: 0;
+}
+.lay-example li {
+  margin-bottom: 0.2rem;
 }

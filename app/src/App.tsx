@@ -8,9 +8,10 @@ import { BracketView } from './components/BracketView';
 import { Leaderboard } from './components/Leaderboard';
 import { PersonView } from './components/PersonView';
 import { GradingPage } from './components/GradingPage';
+import { PoolInfo } from './components/PoolInfo';
 import './App.css';
 
-type Page = 'bracket' | 'leaderboard' | 'person';
+type Page = 'bracket' | 'leaderboard' | 'person' | 'poolinfo';
 
 function CascadingFilter({
   selectedPerson,
@@ -117,6 +118,7 @@ function MainApp() {
     { key: 'bracket', label: 'Bracket' },
     { key: 'leaderboard', label: 'Leaderboard' },
     // { key: 'person', label: 'By Person' },
+    { key: 'poolinfo', label: 'Pool Info' },
   ];
 
   return (
@@ -138,13 +140,13 @@ function MainApp() {
 
       {hasBrackets && (
         <div className="toolbar">
+          <StatsOverview />
           <CascadingFilter
             selectedPerson={selectedPerson}
             setSelectedPerson={setSelectedPerson}
             selectedBracket={selectedBracket}
             setSelectedBracket={setSelectedBracket}
           />
-          <StatsOverview />
         </div>
       )}
 
@@ -174,6 +176,12 @@ function MainApp() {
           {hasBrackets ? <PersonView /> : (
             <div className="empty-state"><h3>Upload brackets first</h3></div>
           )}
+        </div>
+      )}
+
+      {page === 'poolinfo' && (
+        <div className="container">
+          <PoolInfo />
         </div>
       )}
     </>

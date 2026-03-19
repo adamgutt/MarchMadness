@@ -273,6 +273,23 @@ function GameDetailPanel({ slot, onClose, isPersonView }: {
             )}
           </div>
         </div>
+
+        {/* Eliminated brackets — team they needed isn't in this game */}
+        {!isPersonView && slot.eliminatedPickers.length > 0 && (
+          <div className="detail-eliminated">
+            <div className="detail-eliminated-header">
+              <span className="eliminated-icon">✗</span>
+              <span>Eliminated ({slot.eliminatedPickers.length}) — picked a team not in this game</span>
+            </div>
+            <div className="detail-pickers">
+              {slot.eliminatedPickers.map(p => (
+                <span key={p.name} className="picker-tag picker-tag-eliminated">
+                  {p.name} <span className="eliminated-team">({p.team})</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

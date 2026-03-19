@@ -73,81 +73,116 @@ export function buildFullBracket(
     return results[key]?.winner || null;
   }
 
-  // Helper: count how many active brackets have a specific team advancing in a round+region+position
-  // We do this by tracing each bracket's picks through the bracket tree
-  function getPickCounts(
-    round: string,
-    region: string,
-    _position: number,
-    team1: string | null,
-    team2: string | null,
-  ): { topCount: number; bottomCount: number; topPickers: string[]; bottomPickers: string[] } {
-    const topPickers: string[] = [];
-    const bottomPickers: string[] = [];
-
-    if (!team1 && !team2) return { topCount: 0, bottomCount: 0, topPickers, bottomPickers };
-
-    for (const [name, data] of Object.entries(activeBrackets)) {
-      // Find this bracket's pick for this specific game
-      for (const g of data.games) {
-        if (g.round !== round || g.region !== region) continue;
-        // Match by teams — the game must contain both teams (in any order)
-        const gameTeams = [norm(g.team1), norm(g.team2)].sort();
-        const slotTeams = [norm(team1 || ''), norm(team2 || '')].sort();
-        if (gameTeams[0] === slotTeams[0] && gameTeams[1] === slotTeams[1]) {
-          if (team1 && norm(g.pick) === norm(team1)) {
-            topPickers.push(name);
-          } else if (team2 && norm(g.pick) === norm(team2)) {
-            bottomPickers.push(name);
-          }
-          break;
-        }
-      }
+  // Helper: find a bracket's pick for a game matching two teams in a round/region
+  function findBracketPick(data: BracketData, round: string, region: string, t1: string, t2: string): string | null {
+    for (const g of data.games) {
+      if (g.round !== round) continue;
+      if (region && g.region !== region) continue;
+      const gt = [norm(g.team1), norm(g.team2)].sort();
+      const st = [norm(t1), norm(t2)].sort();
+      if (gt[0] === st[0] && gt[1] === st[1]) return g.pick;
     }
-
-    return { topCount: topPickers.length, bottomCount: bottomPickers.length, topPickers, bottomPickers };
+    return null;
   }
 
-  // Same thing but for Final Four / Championship which may have different region labels
-  function getPickCountsFF(
-    round: string,
-    _regionPattern: string,
-    team1: string | null,
-    team2: string | null,
-  ): { topCount: number; bottomCount: number; topPickers: string[]; bottomPickers: string[] } {
-    const topPickers: string[] = [];
-    const bottomPickers: string[] = [];
+  // Precompute each bracket's projected advancement through the entire tree.
+  // For each tree position, store who they picked to advance (win that game).
+  const traces: Record<string, {
+    regions: Record<string, {
+      r64: (string | null)[];
+      r32: (string | null)[];
+      s16: (string | null)[];
+      e8: string | null;
+    }>;
+    ff: (string | null)[];
+    champ: string | null;
+  }> = {};
 
-    if (!team1 && !team2) return { topCount: 0, bottomCount: 0, topPickers, bottomPickers };
+  for (const [name, data] of Object.entries(activeBrackets)) {
+    const trace: typeof traces[string] = { regions: {}, ff: [null, null], champ: null };
 
-    for (const [name, data] of Object.entries(activeBrackets)) {
-      for (const g of data.games) {
-        if (g.round !== round) continue;
-        // For FF/Championship, match by teams
-        const gameTeams = [norm(g.team1), norm(g.team2)].sort();
-        const slotTeams = [norm(team1 || ''), norm(team2 || '')].sort();
-        if (gameTeams[0] === slotTeams[0] && gameTeams[1] === slotTeams[1]) {
-          if (team1 && norm(g.pick) === norm(team1)) {
-            topPickers.push(name);
-          } else if (team2 && norm(g.pick) === norm(team2)) {
-            bottomPickers.push(name);
-          }
-          break;
-        }
+    for (const region of REGIONS) {
+      const r64Games = regionR64[region] || [];
+
+      const r64: (string | null)[] = r64Games.map(g =>
+        findBracketPick(data, 'Round of 64', region, g.team1, g.team2)
+      );
+
+      const r32: (string | null)[] = [];
+      for (let i = 0; i < 4; i++) {
+        const t1 = r64[2 * i], t2 = r64[2 * i + 1];
+        r32.push(t1 && t2 ? findBracketPick(data, 'Round of 32', region, t1, t2) : null);
       }
+
+      const s16: (string | null)[] = [];
+      for (let i = 0; i < 2; i++) {
+        const t1 = r32[2 * i], t2 = r32[2 * i + 1];
+        s16.push(t1 && t2 ? findBracketPick(data, 'Sweet 16', region, t1, t2) : null);
+      }
+
+      const e8 = s16[0] && s16[1] ? findBracketPick(data, 'Elite 8', region, s16[0], s16[1]) : null;
+
+      trace.regions[region] = { r64, r32, s16, e8 };
     }
 
-    return { topCount: topPickers.length, bottomCount: bottomPickers.length, topPickers, bottomPickers };
+    const eastE8 = trace.regions['East']?.e8;
+    const southE8 = trace.regions['South']?.e8;
+    const westE8 = trace.regions['West']?.e8;
+    const midwestE8 = trace.regions['Midwest']?.e8;
+
+    trace.ff[0] = eastE8 && southE8 ? findBracketPick(data, 'Final Four', '', eastE8, southE8) : null;
+    trace.ff[1] = westE8 && midwestE8 ? findBracketPick(data, 'Final Four', '', westE8, midwestE8) : null;
+    trace.champ = trace.ff[0] && trace.ff[1] ? findBracketPick(data, 'Championship', '', trace.ff[0], trace.ff[1]) : null;
+
+    traces[name] = trace;
+  }
+
+  // Count how many brackets project a specific team to a tree position.
+  function countProjected(
+    team: string | null,
+    accessor: (t: typeof traces[string]) => string | null,
+  ): { count: number; pickers: string[] } {
+    if (!team) return { count: 0, pickers: [] };
+    const teamNorm = norm(team);
+    const pickers: string[] = [];
+    for (const [name, trace] of Object.entries(traces)) {
+      const projected = accessor(trace);
+      if (projected && norm(projected) === teamNorm) pickers.push(name);
+    }
+    return { count: pickers.length, pickers };
+  }
+
+  // Find brackets whose projected winner for a position isn't either actual team.
+  function getEliminated(
+    topTeam: string | null,
+    bottomTeam: string | null,
+    accessor: (t: typeof traces[string]) => string | null,
+  ): { name: string; team: string }[] {
+    if (!topTeam && !bottomTeam) return [];
+    const topNorm = topTeam ? norm(topTeam) : null;
+    const bottomNorm = bottomTeam ? norm(bottomTeam) : null;
+    const result: { name: string; team: string }[] = [];
+    for (const [name, trace] of Object.entries(traces)) {
+      const projected = accessor(trace);
+      if (!projected) continue;
+      const projNorm = norm(projected);
+      if (projNorm !== topNorm && projNorm !== bottomNorm) {
+        result.push({ name, team: projected });
+      }
+    }
+    return result;
   }
 
   // Build each region
   const regions: RegionBracket[] = REGIONS.map(region => {
     const r64Games = regionR64[region] || [];
 
-    // R64 slots
+    // R64 slots — count who picked each team (same matchups for all brackets)
     const r64: BracketSlot[] = r64Games.map((g, i) => {
       const winner = getWinner(g.team1, g.team2);
-      const counts = getPickCounts('Round of 64', region, i, g.team1, g.team2);
+      const accessor = (t: typeof traces[string]) => t.regions[region]?.r64[i] ?? null;
+      const topResult = countProjected(g.team1, accessor);
+      const bottomResult = countProjected(g.team2, accessor);
       return {
         slotId: `${region}_r64_${i}`,
         round: 'Round of 64',
@@ -158,12 +193,16 @@ export function buildFullBracket(
         bottomTeam: g.team2,
         bottomSeed: g.seed2,
         winner,
-        ...counts,
+        topCount: topResult.count,
+        bottomCount: bottomResult.count,
+        topPickers: topResult.pickers,
+        bottomPickers: bottomResult.pickers,
+        eliminatedPickers: [],
         totalBrackets,
       };
     });
 
-    // R32: winners of R64 pairs (0+1, 2+3, 4+5, 6+7)
+    // R32: count = how many brackets project each team to this tree position
     const r32: BracketSlot[] = [];
     for (let i = 0; i < 4; i++) {
       const top = r64[i * 2]?.winner || null;
@@ -171,7 +210,9 @@ export function buildFullBracket(
       const topSeed = top === r64[i * 2]?.topTeam ? r64[i * 2]?.topSeed || '' : r64[i * 2]?.bottomSeed || '';
       const bottomSeed = bottom === r64[i * 2 + 1]?.topTeam ? r64[i * 2 + 1]?.topSeed || '' : r64[i * 2 + 1]?.bottomSeed || '';
       const winner = top && bottom ? getWinner(top, bottom) : null;
-      const counts = getPickCounts('Round of 32', region, i, top, bottom);
+      const r32Accessor = (t: typeof traces[string]) => t.regions[region]?.r32[i] ?? null;
+      const topResult = countProjected(top, r32Accessor);
+      const bottomResult = countProjected(bottom, r32Accessor);
       r32.push({
         slotId: `${region}_r32_${i}`,
         round: 'Round of 32',
@@ -182,12 +223,16 @@ export function buildFullBracket(
         bottomTeam: bottom,
         bottomSeed,
         winner,
-        ...counts,
+        topCount: topResult.count,
+        bottomCount: bottomResult.count,
+        topPickers: topResult.pickers,
+        bottomPickers: bottomResult.pickers,
+        eliminatedPickers: getEliminated(top, bottom, r32Accessor),
         totalBrackets,
       });
     }
 
-    // S16: winners of R32 pairs (0+1, 2+3)
+    // S16
     const s16: BracketSlot[] = [];
     for (let i = 0; i < 2; i++) {
       const top = r32[i * 2]?.winner || null;
@@ -195,7 +240,9 @@ export function buildFullBracket(
       const topSeed = getSeedForTeam(top, r32[i * 2]);
       const bottomSeed = getSeedForTeam(bottom, r32[i * 2 + 1]);
       const winner = top && bottom ? getWinner(top, bottom) : null;
-      const counts = getPickCounts('Sweet 16', region, i, top, bottom);
+      const s16Accessor = (t: typeof traces[string]) => t.regions[region]?.s16[i] ?? null;
+      const topResult = countProjected(top, s16Accessor);
+      const bottomResult = countProjected(bottom, s16Accessor);
       s16.push({
         slotId: `${region}_s16_${i}`,
         round: 'Sweet 16',
@@ -206,18 +253,24 @@ export function buildFullBracket(
         bottomTeam: bottom,
         bottomSeed,
         winner,
-        ...counts,
+        topCount: topResult.count,
+        bottomCount: bottomResult.count,
+        topPickers: topResult.pickers,
+        bottomPickers: bottomResult.pickers,
+        eliminatedPickers: getEliminated(top, bottom, s16Accessor),
         totalBrackets,
       });
     }
 
-    // E8: winner of S16 pair
+    // E8
     const e8Top = s16[0]?.winner || null;
     const e8Bottom = s16[1]?.winner || null;
     const e8TopSeed = getSeedForTeam(e8Top, s16[0]);
     const e8BottomSeed = getSeedForTeam(e8Bottom, s16[1]);
     const e8Winner = e8Top && e8Bottom ? getWinner(e8Top, e8Bottom) : null;
-    const e8Counts = getPickCounts('Elite 8', region, 0, e8Top, e8Bottom);
+    const e8Accessor = (t: typeof traces[string]) => t.regions[region]?.e8 ?? null;
+    const e8TopResult = countProjected(e8Top, e8Accessor);
+    const e8BottomResult = countProjected(e8Bottom, e8Accessor);
     const e8: BracketSlot[] = [{
       slotId: `${region}_e8_0`,
       round: 'Elite 8',
@@ -228,14 +281,18 @@ export function buildFullBracket(
       bottomTeam: e8Bottom,
       bottomSeed: e8BottomSeed,
       winner: e8Winner,
-      ...e8Counts,
+      topCount: e8TopResult.count,
+      bottomCount: e8BottomResult.count,
+      topPickers: e8TopResult.pickers,
+      bottomPickers: e8BottomResult.pickers,
+      eliminatedPickers: getEliminated(e8Top, e8Bottom, e8Accessor),
       totalBrackets,
     }];
 
     return { region, r64, r32, s16, e8 };
   });
 
-  // Final Four: East winner vs South winner, West winner vs Midwest winner
+  // Final Four
   const eastWinner = regions[0].e8[0].winner;
   const southWinner = regions[1].e8[0].winner;
   const westWinner = regions[2].e8[0].winner;
@@ -244,12 +301,16 @@ export function buildFullBracket(
   const ff1Top = eastWinner;
   const ff1Bottom = southWinner;
   const ff1Winner = ff1Top && ff1Bottom ? getWinner(ff1Top, ff1Bottom) : null;
-  const ff1Counts = getPickCountsFF('Final Four', 'East/South', ff1Top, ff1Bottom);
+  const ff1Accessor = (t: typeof traces[string]) => t.ff[0];
+  const ff1TopResult = countProjected(ff1Top, ff1Accessor);
+  const ff1BottomResult = countProjected(ff1Bottom, ff1Accessor);
 
   const ff2Top = westWinner;
   const ff2Bottom = midwestWinner;
   const ff2Winner = ff2Top && ff2Bottom ? getWinner(ff2Top, ff2Bottom) : null;
-  const ff2Counts = getPickCountsFF('Final Four', 'West/Midwest', ff2Top, ff2Bottom);
+  const ff2Accessor = (t: typeof traces[string]) => t.ff[1];
+  const ff2TopResult = countProjected(ff2Top, ff2Accessor);
+  const ff2BottomResult = countProjected(ff2Bottom, ff2Accessor);
 
   const ff: BracketSlot[] = [
     {
@@ -262,7 +323,11 @@ export function buildFullBracket(
       bottomTeam: ff1Bottom,
       bottomSeed: getSeedForTeamFromRegion(ff1Bottom, regions[0], regions[1]),
       winner: ff1Winner,
-      ...ff1Counts,
+      topCount: ff1TopResult.count,
+      bottomCount: ff1BottomResult.count,
+      topPickers: ff1TopResult.pickers,
+      bottomPickers: ff1BottomResult.pickers,
+      eliminatedPickers: getEliminated(ff1Top, ff1Bottom, ff1Accessor),
       totalBrackets,
     },
     {
@@ -275,7 +340,11 @@ export function buildFullBracket(
       bottomTeam: ff2Bottom,
       bottomSeed: getSeedForTeamFromRegion(ff2Bottom, regions[2], regions[3]),
       winner: ff2Winner,
-      ...ff2Counts,
+      topCount: ff2TopResult.count,
+      bottomCount: ff2BottomResult.count,
+      topPickers: ff2TopResult.pickers,
+      bottomPickers: ff2BottomResult.pickers,
+      eliminatedPickers: getEliminated(ff2Top, ff2Bottom, ff2Accessor),
       totalBrackets,
     },
   ];
@@ -284,7 +353,9 @@ export function buildFullBracket(
   const champTop = ff[0].winner;
   const champBottom = ff[1].winner;
   const champWinner = champTop && champBottom ? getWinner(champTop, champBottom) : null;
-  const champCounts = getPickCountsFF('Championship', '', champTop, champBottom);
+  const champAccessor = (t: typeof traces[string]) => t.champ;
+  const champTopResult = countProjected(champTop, champAccessor);
+  const champBottomResult = countProjected(champBottom, champAccessor);
 
   const championship: BracketSlot = {
     slotId: 'champ',
@@ -296,7 +367,11 @@ export function buildFullBracket(
     bottomTeam: champBottom,
     bottomSeed: ff[1].winner ? getSeedForTeamFromRegion(champBottom, ...regions) : '',
     winner: champWinner,
-    ...champCounts,
+    topCount: champTopResult.count,
+    bottomCount: champBottomResult.count,
+    topPickers: champTopResult.pickers,
+    bottomPickers: champBottomResult.pickers,
+    eliminatedPickers: getEliminated(champTop, champBottom, champAccessor),
     totalBrackets,
   };
 
@@ -358,7 +433,7 @@ export function buildPersonBracket(
       championship: { slotId: 'champ', round: 'Championship', region: '', position: 0,
         topTeam: null, topSeed: '', bottomTeam: null, bottomSeed: '',
         winner: null, topCount: 0, bottomCount: 0, totalBrackets: 0,
-        topPickers: [], bottomPickers: [] },
+        topPickers: [], bottomPickers: [], eliminatedPickers: [] },
     };
   }
 
@@ -431,7 +506,7 @@ export function buildPersonBracket(
       return {
         slotId: `${region}_r64_${i}`, round: 'Round of 64', region, position: i,
         topTeam: g.team1, topSeed: g.seed1, bottomTeam: g.team2, bottomSeed: g.seed2,
-        winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+        winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(g.team1, g.team2, pick),
       };
@@ -450,7 +525,7 @@ export function buildPersonBracket(
       r32.push({
         slotId: `${region}_r32_${i}`, round: 'Round of 32', region, position: i,
         topTeam: topPick, topSeed, bottomTeam: bottomPick, bottomSeed, winner,
-        topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+        topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(topPick, bottomPick, pick),
       });
@@ -468,7 +543,7 @@ export function buildPersonBracket(
       s16.push({
         slotId: `${region}_s16_${i}`, round: 'Sweet 16', region, position: i,
         topTeam: top, topSeed, bottomTeam: bottom, bottomSeed, winner,
-        topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+        topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(top, bottom, pick),
       });
@@ -484,7 +559,7 @@ export function buildPersonBracket(
     const e8: BracketSlot[] = [{
       slotId: `${region}_e8_0`, round: 'Elite 8', region, position: 0,
       topTeam: e8Top, topSeed: e8TopSeed, bottomTeam: e8Bottom, bottomSeed: e8BottomSeed,
-      winner: e8Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+      winner: e8Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
       personPick: e8Pick,
       pickStatus: getPickStatus(e8Top, e8Bottom, e8Pick),
     }];
@@ -508,14 +583,14 @@ export function buildPersonBracket(
       slotId: 'ff_0', round: 'Final Four', region: 'East/South', position: 0,
       topTeam: ff1Top, topSeed: getSeedForTeamFromRegion(ff1Top, regions[0], regions[1]),
       bottomTeam: ff1Bottom, bottomSeed: getSeedForTeamFromRegion(ff1Bottom, regions[0], regions[1]),
-      winner: ff1Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+      winner: ff1Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
       personPick: ff1Pick, pickStatus: getPickStatus(ff1Top, ff1Bottom, ff1Pick),
     },
     {
       slotId: 'ff_1', round: 'Final Four', region: 'West/Midwest', position: 1,
       topTeam: ff2Top, topSeed: getSeedForTeamFromRegion(ff2Top, regions[2], regions[3]),
       bottomTeam: ff2Bottom, bottomSeed: getSeedForTeamFromRegion(ff2Bottom, regions[2], regions[3]),
-      winner: ff2Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+      winner: ff2Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
       personPick: ff2Pick, pickStatus: getPickStatus(ff2Top, ff2Bottom, ff2Pick),
     },
   ];
@@ -530,7 +605,7 @@ export function buildPersonBracket(
     slotId: 'champ', round: 'Championship', region: '', position: 0,
     topTeam: champTop, topSeed: champTop ? getSeedForTeamFromRegion(champTop, ...regions) : '',
     bottomTeam: champBottom, bottomSeed: champBottom ? getSeedForTeamFromRegion(champBottom, ...regions) : '',
-    winner: champWinner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [],
+    winner: champWinner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
     personPick: champPick, pickStatus: getPickStatus(champTop, champBottom, champPick),
   };
 

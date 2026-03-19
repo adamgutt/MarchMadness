@@ -63,6 +63,8 @@ export interface BracketSlot {
   // Who picked which
   topPickers: string[];
   bottomPickers: string[];
+  // Brackets whose projected winner isn't in the actual game
+  eliminatedPickers: { name: string; team: string }[];
   // Individual bracket view
   personPick?: string | null;         // this person's pick for this game
   pickStatus?: 'correct' | 'incorrect' | 'pending' | null;
