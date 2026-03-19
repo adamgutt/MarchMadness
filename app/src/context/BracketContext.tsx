@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { BracketData, BracketEntry, Game, GameResult, PersonScore } from '../types';
-import { loadBracketCSV, loadResultsFromText, buildGameIndex, getScores, getGameKey, normalizeTeamName } from '../utils/csv';
+import { loadBracketCSV, loadResultsFromText, buildGameIndex, getScores, getGameKey } from '../utils/csv';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
