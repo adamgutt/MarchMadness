@@ -34,9 +34,8 @@ interface BracketState {
 
 const BracketContext = createContext<BracketState | null>(null);
 
-const STORAGE_BRACKETS = 'mm_brackets';
-const STORAGE_RESULTS = 'mm_results';
-const STORAGE_ENTRIES = 'mm_entries';
+// localStorage keys — only used to NUKE stale data on load
+const STORAGE_KEYS_TO_NUKE = ['mm_brackets', 'mm_results', 'mm_entries'];
 
 export function BracketProvider({ children }: { children: ReactNode }) {
   const [brackets, setBrackets] = useState<Record<string, BracketData>>({});
@@ -54,8 +53,11 @@ export function BracketProvider({ children }: { children: ReactNode }) {
   // Track whether we're currently loading from Firestore to suppress sync-back
   const isLoadingFromFirestore = useRef(true);
 
-  // Load from Firestore on mount, fall back to localStorage if Firestore fails
+  // Load from Firestore ONLY — no localStorage fallback. Nuke any stale localStorage.
   useEffect(() => {
+    // Destroy any stale localStorage data immediately
+    for (const key of STORAGE_KEYS_TO_NUKE) localStorage.removeItem(key);
+
     (async () => {
       try {
         const snap = await getDoc(doc(db, COLLECTION, DOC_ID));
@@ -64,7 +66,6 @@ export function BracketProvider({ children }: { children: ReactNode }) {
           if (data.brackets) setBrackets(data.brackets);
           if (data.entries) setEntries(data.entries);
           if (data.results) {
-            // Migrate result keys to normalized format (lowercase + team aliases)
             const migrated: Record<string, GameResult> = {};
             for (const [oldKey, val] of Object.entries(data.results as Record<string, GameResult>)) {
               const parts = oldKey.split(' vs ');
@@ -79,18 +80,10 @@ export function BracketProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (err) {
-        console.warn('Firestore load failed, using localStorage fallback', err);
-        try {
-          const b = localStorage.getItem(STORAGE_BRACKETS);
-          const e = localStorage.getItem(STORAGE_ENTRIES);
-          const r = localStorage.getItem(STORAGE_RESULTS);
-          if (b) setBrackets(JSON.parse(b));
-          if (e) setEntries(JSON.parse(e));
-          if (r) setResults(JSON.parse(r));
-        } catch { /* ignore */ }
+        console.warn('Firestore load failed', err);
+        // NO localStorage fallback — if Firestore is down, show empty state
       }
       loadedFromFirestore.current = true;
-      // Wait for React to finish processing state updates before enabling sync
       setTimeout(() => { isLoadingFromFirestore.current = false; }, 500);
     })();
   }, []);
@@ -109,26 +102,17 @@ export function BracketProvider({ children }: { children: ReactNode }) {
     setScores(s);
   }, [brackets, results]);
 
-  // Persist to localStorage + Firestore
+  // Sync ONLY results back to Firestore — brackets & entries are READ-ONLY from browser.
+  // Only import scripts can modify brackets/entries. This prevents any stale browser
+  // data from ever overwriting the canonical Firestore data.
   useEffect(() => {
-    // Save to localStorage always
-    try {
-      localStorage.setItem(STORAGE_BRACKETS, JSON.stringify(brackets));
-      localStorage.setItem(STORAGE_RESULTS, JSON.stringify(results));
-      localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
-    } catch { /* quota exceeded */ }
-
-    // Don't sync back to Firestore while still loading initial data
     if (isLoadingFromFirestore.current) return;
     if (!loadedFromFirestore.current) return;
 
-    // Save to Firestore (fire and forget)
-    setDoc(doc(db, COLLECTION, DOC_ID), {
-      brackets,
-      entries,
-      results,
-    }).catch(err => console.warn('Firestore save failed', err));
-  }, [brackets, results, entries]);
+    // Only write results (auto-graded live scores + manual result entry)
+    setDoc(doc(db, COLLECTION, DOC_ID), { results }, { merge: true })
+      .catch(err => console.warn('Firestore results save failed', err));
+  }, [results]);
 
   // Filtered data based on selected pool
   const filteredBrackets = useMemo(() => {
@@ -203,9 +187,7 @@ export function BracketProvider({ children }: { children: ReactNode }) {
     setBrackets({});
     setResults({});
     setEntries([]);
-    localStorage.removeItem(STORAGE_BRACKETS);
-    localStorage.removeItem(STORAGE_RESULTS);
-    localStorage.removeItem(STORAGE_ENTRIES);
+    for (const key of STORAGE_KEYS_TO_NUKE) localStorage.removeItem(key);
     setDoc(doc(db, COLLECTION, DOC_ID), { brackets: {}, entries: [], results: {} })
       .catch(err => console.warn('Firestore clear failed', err));
   }, []);
