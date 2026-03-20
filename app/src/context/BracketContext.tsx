@@ -226,20 +226,18 @@ export function BracketProvider({ children }: { children: ReactNode }) {
         const newResults: Record<string, { winner: string; round: string }> = {};
         for (const lg of live) {
           if (lg.status !== 'post' || !lg.winner) continue;
-          // Try to match against our games
           for (const game of games) {
             const match = matchLiveGame(lg, game.team1, game.team2);
             if (match) {
               const key = getGameKey(game.team1, game.team2);
-              // Only auto-grade if we don't already have a result for this game
               if (!results[key]) {
-                // Map winner name to match our team names
                 const winnerNorm = normalizeTeamName(match.winner!);
                 const t1Norm = normalizeTeamName(game.team1);
                 const t2Norm = normalizeTeamName(game.team2);
                 const winner = winnerNorm === t1Norm ? game.team1 : winnerNorm === t2Norm ? game.team2 : match.winner!;
                 newResults[key] = { winner, round: game.round };
               }
+              break;
             }
           }
         }

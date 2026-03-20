@@ -89,11 +89,19 @@ const TEAM_ALIASES: Record<string, string> = {
   'central florida': 'ucf',
   'mcneese state': 'mcneese',
   'connecticut': 'uconn',
+  'n carolina': 'north carolina',
+  'n dakota st': 'north dakota st',
+  'n dakota state': 'north dakota st',
+  'nc state': 'nc state',
+  's florida': 'south florida',
+  'saint marys': 'st marys',
+  "saint mary's": "st mary's",
 };
 
 /** Normalize a team name to a canonical lowercase form for matching. */
 export function normalizeTeamName(name: string): string {
-  const lower = name.toLowerCase().trim();
+  // Strip periods, collapse whitespace, lowercase
+  const lower = name.toLowerCase().trim().replace(/\./g, '').replace(/\s+/g, ' ');
   return TEAM_ALIASES[lower] || lower;
 }
 
@@ -286,8 +294,17 @@ export function getScores(
   for (const [person, data] of Object.entries(brackets)) {
     const score: PersonScore = { correct: 0, incorrect: 0, pending: 0, total: 0, points: 0, maxPoints: 0 };
 
+    // Track per-round to detect cross-round key collisions
+    const seenRoundKeys = new Set<string>();
+
     for (const g of data.games) {
       const key = getGameKey(g.team1, g.team2);
+      const roundKey = g.round + '|' + key;
+
+      // Skip duplicate round+key combos within same bracket
+      if (seenRoundKeys.has(roundKey)) continue;
+      seenRoundKeys.add(roundKey);
+
       const result = results[key];
       const pts = pointsByRound[g.round] || 1;
 
