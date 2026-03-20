@@ -184,12 +184,13 @@ export function BracketProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearAll = useCallback(() => {
+    // DISABLED: clearAll no longer writes to Firestore.
+    // Bracket data is managed exclusively via import scripts.
+    // Only local state is cleared (resets on refresh from Firestore).
     setBrackets({});
     setResults({});
     setEntries([]);
     for (const key of STORAGE_KEYS_TO_NUKE) localStorage.removeItem(key);
-    setDoc(doc(db, COLLECTION, DOC_ID), { brackets: {}, entries: [], results: {} })
-      .catch(err => console.warn('Firestore clear failed', err));
   }, []);
 
   // Live scores polling + auto-grading

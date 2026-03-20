@@ -9,7 +9,7 @@ interface PendingFile {
 }
 
 export function UploadSection() {
-  const { addBracket, entries, removeBracket, toggleMute, clearAll } = useBrackets();
+  const { addBracket, entries, removeBracket, toggleMute } = useBrackets();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [pending, setPending] = useState<PendingFile | null>(null);
@@ -143,13 +143,7 @@ export function UploadSection() {
               </div>
             ))}
           </div>
-          <button
-            className="btn btn-secondary"
-            style={{ marginTop: '0.5rem' }}
-            onClick={() => { if (window.confirm('Delete ALL brackets and results? This cannot be undone.')) clearAll(); }}
-          >
-            Clear All Data
-          </button>
+
         </div>
       )}
     </>

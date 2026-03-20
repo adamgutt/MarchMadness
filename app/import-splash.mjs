@@ -56,7 +56,6 @@ function buildGames(splashData, espnNames) {
 
     for (const matchup of section.initialGames) {
       for (const team of matchup) {
-        if (team.__type !== 'Team') continue;
         const key = `${regionName}-${team.number}`;
         const espnName = espnNames[key];
         if (!espnName) {
