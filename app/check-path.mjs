@@ -1,0 +1,10 @@
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+const app = initializeApp({apiKey:'AIzaSyAKbyio_RFQqltmQaVqgSoSFKMIfRKFWVE',projectId:'march-madness-7d2f6',storageBucket:'march-madness-7d2f6.firebasestorage.app'});
+const snap = await getDoc(doc(getFirestore(app),'bracketData','main'));
+const raw = snap.data();
+console.log('Top keys:', Object.keys(raw));
+if (raw.data) console.log('data type:', typeof raw.data, '| keys:', Object.keys(raw.data).slice(0,5));
+if (raw.brackets) console.log('brackets at top level, count:', Object.keys(raw.brackets).length);
+if (raw.data?.brackets) console.log('brackets at data.brackets, count:', Object.keys(raw.data.brackets).length);
+process.exit(0);

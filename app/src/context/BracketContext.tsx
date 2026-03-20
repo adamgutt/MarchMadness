@@ -51,7 +51,8 @@ export function BracketProvider({ children }: { children: ReactNode }) {
   const [scores, setScores] = useState<Record<string, PersonScore>>({});
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const loadedFromFirestore = useRef(false);
-  const skipNextSync = useRef(false);
+  // Track whether we're currently loading from Firestore to suppress sync-back
+  const isLoadingFromFirestore = useRef(true);
 
   // Load from Firestore on mount, fall back to localStorage if Firestore fails
   useEffect(() => {
@@ -60,7 +61,6 @@ export function BracketProvider({ children }: { children: ReactNode }) {
         const snap = await getDoc(doc(db, COLLECTION, DOC_ID));
         if (snap.exists()) {
           const data = snap.data();
-          skipNextSync.current = true;
           if (data.brackets) setBrackets(data.brackets);
           if (data.entries) setEntries(data.entries);
           if (data.results) {
@@ -80,7 +80,6 @@ export function BracketProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.warn('Firestore load failed, using localStorage fallback', err);
-        // Only fall back to localStorage if Firestore is unreachable
         try {
           const b = localStorage.getItem(STORAGE_BRACKETS);
           const e = localStorage.getItem(STORAGE_ENTRIES);
@@ -91,6 +90,8 @@ export function BracketProvider({ children }: { children: ReactNode }) {
         } catch { /* ignore */ }
       }
       loadedFromFirestore.current = true;
+      // Wait for React to finish processing state updates before enabling sync
+      setTimeout(() => { isLoadingFromFirestore.current = false; }, 500);
     })();
   }, []);
 
@@ -117,11 +118,8 @@ export function BracketProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
     } catch { /* quota exceeded */ }
 
-    // Skip sync for the initial Firestore load to avoid writing back what we just read
-    if (skipNextSync.current) {
-      skipNextSync.current = false;
-      return;
-    }
+    // Don't sync back to Firestore while still loading initial data
+    if (isLoadingFromFirestore.current) return;
     if (!loadedFromFirestore.current) return;
 
     // Save to Firestore (fire and forget)
