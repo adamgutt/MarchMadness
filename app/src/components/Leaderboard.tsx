@@ -1,4 +1,7 @@
 import { useBrackets } from '../context/BracketContext';
+import { useMemo, useState } from 'react';
+
+type SortField = 'points' | 'maxPoints' | 'correct' | 'incorrect' | 'accuracy';
 
 interface LeaderboardProps {
   onViewBracket?: (bracketName: string) => void;
@@ -6,7 +9,26 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ onViewBracket, selectedPerson }: LeaderboardProps) {
-  const { filteredScores, entries, selectedPool } = useBrackets();
+  const { filteredScores, entries, selectedPool, activeBrackets } = useBrackets();
+  const [sortField, setSortField] = useState<SortField>('points');
+  const [sortAsc, setSortAsc] = useState(false);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) setSortAsc(!sortAsc);
+    else { setSortField(field); setSortAsc(false); }
+  };
+
+  const arrow = (field: SortField) => sortField === field ? (sortAsc ? ' ▲' : ' ▼') : '';
+
+  // Get championship pick for each bracket
+  const champPicks = useMemo(() => {
+    const picks: Record<string, string> = {};
+    for (const [name, data] of Object.entries(activeBrackets)) {
+      const champGame = data.games.find(g => g.round === 'Championship');
+      if (champGame) picks[name] = champGame.pick;
+    }
+    return picks;
+  }, [activeBrackets]);
 
   const sorted = Object.entries(filteredScores)
     .filter(([name]) => {
@@ -14,9 +36,22 @@ export function Leaderboard({ onViewBracket, selectedPerson }: LeaderboardProps)
       const entry = entries.find(e => e.name === name);
       return entry?.person === selectedPerson;
     })
-    .sort(
-      (a, b) => b[1].points - a[1].points || b[1].correct - a[1].correct
-    );
+    .sort((a, b) => {
+      const [, sa] = a;
+      const [, sb] = b;
+      let diff: number;
+      if (sortField === 'accuracy') {
+        const da = sa.correct + sa.incorrect;
+        const db = sb.correct + sb.incorrect;
+        const aa = da > 0 ? sa.correct / da : 0;
+        const ab = db > 0 ? sb.correct / db : 0;
+        diff = ab - aa;
+      } else {
+        diff = sb[sortField] - sa[sortField];
+      }
+      if (diff === 0) diff = sb.points - sa.points || sb.correct - sa.correct;
+      return sortAsc ? -diff : diff;
+    });
 
   if (sorted.length === 0) {
     return <div className="empty-state"><p>No brackets loaded.</p></div>;
@@ -28,12 +63,12 @@ export function Leaderboard({ onViewBracket, selectedPerson }: LeaderboardProps)
         <tr>
           <th>Rank</th>
           <th>Name</th>
-          <th>Points</th>
-          <th>Max</th>
-          <th>Correct</th>
-          <th>Wrong</th>
-          <th>Pending</th>
-          <th>Accuracy</th>
+          <th className="sortable-th" onClick={() => toggleSort('points')}>Points{arrow('points')}</th>
+          <th className="sortable-th" onClick={() => toggleSort('maxPoints')}>Max{arrow('maxPoints')}</th>
+          <th>Champion</th>
+          <th className="sortable-th" onClick={() => toggleSort('correct')}>Correct{arrow('correct')}</th>
+          <th className="sortable-th" onClick={() => toggleSort('incorrect')}>Wrong{arrow('incorrect')}</th>
+          <th className="sortable-th" onClick={() => toggleSort('accuracy')}>Accuracy{arrow('accuracy')}</th>
         </tr>
       </thead>
       <tbody>
@@ -58,9 +93,9 @@ export function Leaderboard({ onViewBracket, selectedPerson }: LeaderboardProps)
               </td>
               <td style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.points}</td>
               <td className="max-points">{s.maxPoints}</td>
+              <td className="champ-col">{champPicks[name] ? `🏆 ${champPicks[name]}` : '-'}</td>
               <td className="correct">{s.correct}</td>
               <td className="incorrect">{s.incorrect}</td>
-              <td className="pending">{s.pending}</td>
               <td>{accuracy}</td>
             </tr>
           );

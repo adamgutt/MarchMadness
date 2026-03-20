@@ -303,6 +303,11 @@ header p {
   text-transform: uppercase;
   margin-top: 0.2rem;
 }
+.stat-pool-line {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
 
 /* ===== Tabs ===== */
 .tabs {
@@ -477,6 +482,13 @@ header p {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+.sortable-th:hover {
+  color: var(--accent);
+}
 .leaderboard-table td {
   padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border);
@@ -493,6 +505,7 @@ header p {
 .incorrect { color: var(--red); }
 .pending { color: var(--muted); }
 .max-points { color: var(--accent2); font-size: 0.85rem; }
+.champ-col { font-size: 0.8rem; white-space: nowrap; }
 
 /* ===== Person View ===== */
 .person-select {
@@ -1343,9 +1356,13 @@ header p {
 
 /* Championship banner for person pick */
 .champ-pick {
-  color: var(--muted);
-  opacity: 0.7;
-  font-size: 0.95rem;
+  color: var(--accent2);
+  opacity: 1;
+  font-size: 1.05rem;
+  background: rgba(255, 107, 53, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  border: 1px dashed var(--accent2);
 }
 
 /* Detail panel person view */
