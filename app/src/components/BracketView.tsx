@@ -11,7 +11,7 @@ interface BracketViewProps {
 }
 
 export function BracketView({ selectedBracket, selectedPerson }: BracketViewProps) {
-  const { activeBrackets, filteredBrackets, results, entries, liveGames } = useBrackets();
+  const { activeBrackets, filteredBrackets, results, entries, liveGames, filteredScores } = useBrackets();
   const [selectedSlot, setSelectedSlot] = useState<BracketSlot | null>(null);
   const isPersonView = selectedBracket !== '';
 
@@ -112,7 +112,7 @@ export function BracketView({ selectedBracket, selectedPerson }: BracketViewProp
 
       {/* Detail panel when a game is clicked */}
       {selectedSlot && (
-        <GameDetailPanel slot={selectedSlot} onClose={() => setSelectedSlot(null)} isPersonView={isPersonView} liveGames={liveGames} />
+        <GameDetailPanel slot={selectedSlot} onClose={() => setSelectedSlot(null)} isPersonView={isPersonView} liveGames={liveGames} scores={filteredScores} entries={entries} />
       )}
     </div>
   );
@@ -233,12 +233,25 @@ function SlotCard({ slot, onSelect, compact, isPersonView, liveGames }: {
   );
 }
 
-function GameDetailPanel({ slot, onClose, isPersonView, liveGames }: {
+function GameDetailPanel({ slot, onClose, isPersonView, liveGames, scores, entries }: {
   slot: BracketSlot;
   onClose: () => void;
   isPersonView: boolean;
   liveGames: LiveGame[];
+  scores: Record<string, import('../types').PersonScore>;
+  entries: import('../types').BracketEntry[];
 }) {
+  const poolMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const e of entries) m[e.name] = e.pool;
+    return m;
+  }, [entries]);
+  const poolClass = (name: string) => {
+    const pool = poolMap[name]?.toLowerCase() || '';
+    if (pool === 'mandel') return 'picker-tag-mandel';
+    if (pool === 'aronoff') return 'picker-tag-aronoff';
+    return '';
+  };
   const total = slot.topCount + slot.bottomCount;
   const topPct = total > 0 ? Math.round((slot.topCount / total) * 100) : 0;
   const bottomPct = total > 0 ? Math.round((slot.bottomCount / total) * 100) : 0;
@@ -284,6 +297,14 @@ function GameDetailPanel({ slot, onClose, isPersonView, liveGames }: {
           )}
         </div>
 
+        {/* Pool color legend */}
+        {!isPersonView && (
+          <div className="detail-pool-legend">
+            <span className="picker-tag picker-tag-mandel">Mandel</span>
+            <span className="picker-tag picker-tag-aronoff">Aronoff</span>
+          </div>
+        )}
+
         {/* Live scoreboard */}
         {liveGame && (liveGame.status === 'in' || liveGame.status === 'pre') && (
           <div className="detail-live-scoreboard">
@@ -315,7 +336,7 @@ function GameDetailPanel({ slot, onClose, isPersonView, liveGames }: {
             )}
             {!isPersonView && slot.topPickers.length > 0 && (
               <div className="detail-pickers">
-                {slot.topPickers.map(p => <span key={p} className="picker-tag">{p}</span>)}
+                {slot.topPickers.map(p => <span key={p} className={`picker-tag ${poolClass(p)}`}>{p}{scores[p] ? ` (${scores[p].maxPoints})` : ''}</span>)}
               </div>
             )}
           </div>
@@ -338,7 +359,7 @@ function GameDetailPanel({ slot, onClose, isPersonView, liveGames }: {
             )}
             {!isPersonView && slot.bottomPickers.length > 0 && (
               <div className="detail-pickers">
-                {slot.bottomPickers.map(p => <span key={p} className="picker-tag">{p}</span>)}
+                {slot.bottomPickers.map(p => <span key={p} className={`picker-tag ${poolClass(p)}`}>{p}{scores[p] ? ` (${scores[p].maxPoints})` : ''}</span>)}
               </div>
             )}
           </div>

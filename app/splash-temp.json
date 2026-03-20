@@ -1,1 +1,75 @@
-{"isWebView":false,"entryName":"Avi Guttman2","gamesSections":[{"id":"East","initialGames":[[{"__type":"Team","number":1,"id":70,"title":"Duke"},{"__type":"Team","number":16,"id":238,"title":"Siena"}],[{"__type":"Team","number":8,"id":200,"title":"Ohio St."},{"__type":"Team","number":9,"id":262,"title":"TCU"}],[{"__type":"Team","number":5,"id":252,"title":"St. Johns"},{"__type":"Team","number":12,"id":194,"title":"N. Iowa"}],[{"__type":"Team","number":4,"id":125,"title":"Kansas"},{"__type":"Team","number":13,"id":369,"title":"CA Baptist"}],[{"__type":"Team","number":6,"id":140,"title":"Louisville"},{"__type":"Team","number":11,"id":244,"title":"S. Florida"}],[{"__type":"Team","number":3,"id":160,"title":"Mich. St."},{"__type":"Team","number":14,"id":328,"title":"N. Dak. St."}],[{"__type":"Team","number":7,"id":287,"title":"UCLA"},{"__type":"Team","number":10,"id":41,"title":"Central FL"}],[{"__type":"Team","number":2,"id":55,"title":"UConn"},{"__type":"Team","number":15,"id":90,"title":"Furman"}]]},{"id":"South","initialGames":[[{"__type":"Team","number":1,"id":83,"title":"Florida"},{"__type":"Team","number":16,"id":213,"title":"Pr. View"}],[{"__type":"Team","number":8,"id":47,"title":"Clemson"},{"__type":"Team","number":9,"id":119,"title":"Iowa"}],[{"__type":"Team","number":5,"id":297,"title":"Vandy"},{"__type":"Team","number":12,"id":152,"title":"McNeese St."}],[{"__type":"Team","number":4,"id":180,"title":"Nebraska"},{"__type":"Team","number":13,"id":278,"title":"Troy"}],[{"__type":"Team","number":6,"id":189,"title":"UNC"},{"__type":"Team","number":11,"id":295,"title":"VCU"}],[{"__type":"Team","number":3,"id":112,"title":"Illinois"},{"__type":"Team","number":14,"id":208,"title":"UPenn"}],[{"__type":"Team","number":7,"id":255,"title":"St. Marys"},{"__type":"Team","number":10,"id":270,"title":"Tex. A&M"}],[{"__type":"Team","number":2,"id":108,"title":"Houston"},{"__type":"Team","number":15,"id":110,"title":"Idaho"}]]},{"id":"West","initialGames":[[{"__type":"Team","number":1,"id":10,"title":"Arizona"},{"__type":"Team","number":16,"id":373,"title":"Long Island"}],[{"__type":"Team","number":8,"id":299,"title":"Villanova"},{"__type":"Team","number":9,"id":293,"title":"Utah St."}],[{"__type":"Team","number":5,"id":318,"title":"Wisconsin"},{"__type":"Team","number":12,"id":105,"title":"High Point"}],[{"__type":"Team","number":4,"id":13,"title":"Arkansas"},{"__type":"Team","number":13,"id":104,"title":"Hawaii"}],[{"__type":"Team","number":6,"id":34,"title":"BYU"},{"__type":"Team","number":11,"id":269,"title":"Texas"}],[{"__type":"Team","number":3,"id":99,"title":"Gonzaga"},{"__type":"Team","number":14,"id":364,"title":"Kenn St"}],[{"__type":"Team","number":7,"id":157,"title":"Miami"},{"__type":"Team","number":10,"id":166,"title":"Missouri"}],[{"__type":"Team","number":2,"id":216,"title":"Purdue"},{"__type":"Team","number":15,"id":374,"title":"Queens"}]]},{"id":"Midwest","initialGames":[[{"__type":"Team","number":1,"id":159,"title":"Michigan"},{"__type":"Team","number":16,"id":109,"title":"Howard"}],[{"__type":"Team","number":8,"id":95,"title":"Georgia"},{"__type":"Team","number":9,"id":254,"title":"St. Louis"}],[{"__type":"Team","number":5,"id":274,"title":"Texas Tech"},{"__type":"Team","number":12,"id":2,"title":"Akron"}],[{"__type":"Team","number":4,"id":3,"title":"Alabama"},{"__type":"Team","number":13,"id":106,"title":"Hofstra"}],[{"__type":"Team","number":6,"id":265,"title":"Tennessee"},{"__type":"Team","number":11,"id":158,"title":"Miami (OH)"}],[{"__type":"Team","number":3,"id":300,"title":"Virginia"},{"__type":"Team","number":14,"id":320,"title":"Wright St"}],[{"__type":"Team","number":7,"id":128,"title":"Kentucky"},{"__type":"Team","number":10,"id":234,"title":"Santa Clara"}],[{"__type":"Team","number":2,"id":120,"title":"Iowa St."},{"__type":"Team","number":15,"id":266,"title":"Tenn. St."}]]},{"id":"final","isFinal":true,"initialGames":[[{"__type":"SectionWinnerLink","sectionId":"East"},{"__type":"SectionWinnerLink","sectionId":"South"}],[{"__type":"SectionWinnerLink","sectionId":"West"},{"__type":"SectionWinnerLink","sectionId":"Midwest"}]]}],"picks":{"1":70,"2":200,"3":252,"4":125,"5":140,"6":160,"7":41,"8":55,"9":83,"10":47,"11":297,"12":278,"13":295,"14":112,"15":255,"16":108,"17":10,"18":293,"19":318,"20":13,"21":34,"22":99,"23":157,"24":216,"25":159,"26":254,"27":2,"28":3,"29":265,"30":300,"31":128,"32":266,"33":70,"34":125,"35":140,"36":55,"37":83,"38":297,"39":112,"40":108,"41":10,"42":13,"43":34,"44":216,"45":159,"46":3,"47":265,"48":128,"49":125,"50":55,"51":83,"52":108,"53":10,"54":34,"55":159,"56":128,"57":55,"58":83,"59":10,"60":159,"61":83,"62":10,"63":10}}
+{
+    "entryName": "Avi Guttman2",
+    "gamesSections": [
+        {
+            "id": "East",
+            "title": "East",
+            "initialGames": [
+                [{"number": 1, "id": 70, "title": "Duke"}, {"number": 16, "id": 238, "title": "Siena"}],
+                [{"number": 8, "id": 200, "title": "Ohio St."}, {"number": 9, "id": 262, "title": "TCU"}],
+                [{"number": 5, "id": 252, "title": "St. Johns"}, {"number": 12, "id": 194, "title": "N. Iowa"}],
+                [{"number": 4, "id": 125, "title": "Kansas"}, {"number": 13, "id": 369, "title": "CA Baptist"}],
+                [{"number": 6, "id": 140, "title": "Louisville"}, {"number": 11, "id": 244, "title": "S. Florida"}],
+                [{"number": 3, "id": 160, "title": "Mich. St."}, {"number": 14, "id": 328, "title": "N. Dak. St."}],
+                [{"number": 7, "id": 287, "title": "UCLA"}, {"number": 10, "id": 41, "title": "Central FL"}],
+                [{"number": 2, "id": 55, "title": "UConn"}, {"number": 15, "id": 90, "title": "Furman"}]
+            ]
+        },
+        {
+            "id": "South",
+            "title": "South",
+            "initialGames": [
+                [{"number": 1, "id": 83, "title": "Florida"}, {"number": 16, "id": 213, "title": "Pr. View"}],
+                [{"number": 8, "id": 47, "title": "Clemson"}, {"number": 9, "id": 119, "title": "Iowa"}],
+                [{"number": 5, "id": 297, "title": "Vandy"}, {"number": 12, "id": 152, "title": "McNeese St."}],
+                [{"number": 4, "id": 180, "title": "Nebraska"}, {"number": 13, "id": 278, "title": "Troy"}],
+                [{"number": 6, "id": 189, "title": "UNC"}, {"number": 11, "id": 295, "title": "VCU"}],
+                [{"number": 3, "id": 112, "title": "Illinois"}, {"number": 14, "id": 208, "title": "UPenn"}],
+                [{"number": 7, "id": 255, "title": "St. Marys"}, {"number": 10, "id": 270, "title": "Tex. A&M"}],
+                [{"number": 2, "id": 108, "title": "Houston"}, {"number": 15, "id": 110, "title": "Idaho"}]
+            ]
+        },
+        {
+            "id": "West",
+            "title": "West",
+            "initialGames": [
+                [{"number": 1, "id": 10, "title": "Arizona"}, {"number": 16, "id": 373, "title": "Long Island"}],
+                [{"number": 8, "id": 299, "title": "Villanova"}, {"number": 9, "id": 293, "title": "Utah St."}],
+                [{"number": 5, "id": 318, "title": "Wisconsin"}, {"number": 12, "id": 105, "title": "High Point"}],
+                [{"number": 4, "id": 13, "title": "Arkansas"}, {"number": 13, "id": 104, "title": "Hawaii"}],
+                [{"number": 6, "id": 34, "title": "BYU"}, {"number": 11, "id": 269, "title": "Texas"}],
+                [{"number": 3, "id": 99, "title": "Gonzaga"}, {"number": 14, "id": 364, "title": "Kenn St"}],
+                [{"number": 7, "id": 157, "title": "Miami"}, {"number": 10, "id": 166, "title": "Missouri"}],
+                [{"number": 2, "id": 216, "title": "Purdue"}, {"number": 15, "id": 374, "title": "Queens"}]
+            ]
+        },
+        {
+            "id": "Midwest",
+            "title": "Midwest",
+            "initialGames": [
+                [{"number": 1, "id": 159, "title": "Michigan"}, {"number": 16, "id": 109, "title": "Howard"}],
+                [{"number": 8, "id": 95, "title": "Georgia"}, {"number": 9, "id": 254, "title": "St. Louis"}],
+                [{"number": 5, "id": 274, "title": "Texas Tech"}, {"number": 12, "id": 2, "title": "Akron"}],
+                [{"number": 4, "id": 3, "title": "Alabama"}, {"number": 13, "id": 106, "title": "Hofstra"}],
+                [{"number": 6, "id": 265, "title": "Tennessee"}, {"number": 11, "id": 158, "title": "Miami (OH)"}],
+                [{"number": 3, "id": 300, "title": "Virginia"}, {"number": 14, "id": 320, "title": "Wright St"}],
+                [{"number": 7, "id": 128, "title": "Kentucky"}, {"number": 10, "id": 234, "title": "Santa Clara"}],
+                [{"number": 2, "id": 120, "title": "Iowa St."}, {"number": 15, "id": 266, "title": "Tenn. St."}]
+            ]
+        }
+    ],
+    "picks": {
+        "1": 70, "2": 200, "3": 252, "4": 125, "5": 140, "6": 160, "7": 41, "8": 55,
+        "9": 83, "10": 47, "11": 297, "12": 278, "13": 295, "14": 112, "15": 255, "16": 108,
+        "17": 10, "18": 293, "19": 318, "20": 13, "21": 34, "22": 99, "23": 157, "24": 216,
+        "25": 159, "26": 254, "27": 2, "28": 3, "29": 265, "30": 300, "31": 128, "32": 266,
+        "33": 70, "34": 125, "35": 140, "36": 55,
+        "37": 83, "38": 297, "39": 112, "40": 108,
+        "41": 10, "42": 13, "43": 34, "44": 216,
+        "45": 159, "46": 3, "47": 265, "48": 128,
+        "49": 125, "50": 55, "51": 83, "52": 108,
+        "53": 10, "54": 34, "55": 159, "56": 128,
+        "57": 55, "58": 83, "59": 10, "60": 159,
+        "61": 83, "62": 10, "63": 10
+    }
+}
