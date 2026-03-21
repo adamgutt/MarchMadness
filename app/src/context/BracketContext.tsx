@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { BracketData, BracketEntry, Game, GameResult, PersonScore } from '../types';
-import { loadBracketCSV, loadResultsFromText, buildGameIndex, getScores, getGameKey, normalizeTeamName } from '../utils/csv';
+import { buildGameIndex, getScores, getGameKey, normalizeTeamName } from '../utils/csv';
 import { fetchLiveScores, LiveGame, matchLiveGame } from '../utils/liveScores';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -25,13 +25,8 @@ interface BracketState {
   filteredScores: Record<string, PersonScore>;
   activeBrackets: Record<string, BracketData>; // filtered + not muted
   liveGames: LiveGame[];
-  addBracket: (name: string, person: string, pool: string, filename: string, text: string) => void;
-  removeBracket: (name: string) => void;
-  toggleMute: (name: string) => void;
-  applyResults: (text: string) => void;
   setResult: (team1: string, team2: string, winner: string, round: string) => void;
   clearResult: (team1: string, team2: string) => void;
-  clearAll: () => void;
 }
 
 const BracketContext = createContext<BracketState | null>(null);
@@ -147,28 +142,6 @@ export function BracketProvider({ children }: { children: ReactNode }) {
     return active;
   }, [filteredBrackets, entries]);
 
-  const addBracket = useCallback((name: string, person: string, pool: string, filename: string, text: string) => {
-    setBrackets(prev => loadBracketCSV(name, text, prev));
-    setEntries(prev => [...prev.filter(e => e.name !== name), { name, person, pool, filename, muted: false }]);
-  }, []);
-
-  const removeBracket = useCallback((name: string) => {
-    setBrackets(prev => {
-      const next = { ...prev };
-      delete next[name];
-      return next;
-    });
-    setEntries(prev => prev.filter(e => e.name !== name));
-  }, []);
-
-  const toggleMute = useCallback((name: string) => {
-    setEntries(prev => prev.map(e => e.name === name ? { ...e, muted: !e.muted } : e));
-  }, []);
-
-  const applyResults = useCallback((text: string) => {
-    setResults(prev => loadResultsFromText(text, prev));
-  }, []);
-
   const setResult = useCallback((team1: string, team2: string, winner: string, round: string) => {
     setResults(prev => {
       const key = getGameKey(team1, team2);
@@ -183,16 +156,6 @@ export function BracketProvider({ children }: { children: ReactNode }) {
       delete next[key];
       return next;
     });
-  }, []);
-
-  const clearAll = useCallback(() => {
-    // DISABLED: clearAll no longer writes to Firestore.
-    // Bracket data is managed exclusively via import scripts.
-    // Only local state is cleared (resets on refresh from Firestore).
-    setBrackets({});
-    setResults({});
-    setEntries([]);
-    for (const key of STORAGE_KEYS_TO_NUKE) localStorage.removeItem(key);
   }, []);
 
   // Live scores polling + auto-grading
@@ -245,7 +208,7 @@ export function BracketProvider({ children }: { children: ReactNode }) {
       selectedPool, setSelectedPool,
       filteredBrackets, filteredGames, filteredScores, activeBrackets,
       liveGames,
-      addBracket, removeBracket, toggleMute, applyResults, setResult, clearResult, clearAll,
+      setResult, clearResult,
     }}>
       {children}
     </BracketContext.Provider>

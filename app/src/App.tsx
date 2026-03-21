@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { BracketProvider, useBrackets } from './context/BracketContext';
-import { UploadSection } from './components/UploadSection';
-import { ResultsSection } from './components/ResultsSection';
+
 import { StatsOverview } from './components/StatsOverview';
 import { BracketView } from './components/BracketView';
 import { Leaderboard } from './components/Leaderboard';
@@ -159,7 +158,7 @@ function MainApp() {
           ) : (
             <div className="empty-state">
               <h3>No brackets uploaded yet</h3>
-              <p>Brackets are added via the manage page.</p>
+              <p>No brackets loaded from Firestore.</p>
             </div>
           )}
         </div>
@@ -196,23 +195,6 @@ function MainApp() {
   );
 }
 
-function ManagePage() {
-  const { entries } = useBrackets();
-  const navigate = useNavigate();
-  return (
-    <div className="manage-page">
-      <header>
-        <h1>MANAGE BRACKETS</h1>
-        <button className="link-btn" onClick={() => navigate('/')}>← Back to Bracket</button>
-      </header>
-      <div className="container">
-        <UploadSection />
-        {entries.length > 0 && <ResultsSection />}
-      </div>
-    </div>
-  );
-}
-
 function GradePage() {
   const navigate = useNavigate();
   return (
@@ -233,7 +215,6 @@ export default function App() {
       <BracketProvider>
         <Routes>
           <Route path="/" element={<MainApp />} />
-          <Route path="/manage" element={<ManagePage />} />
           <Route path="/grade" element={<GradePage />} />
         </Routes>
       </BracketProvider>
