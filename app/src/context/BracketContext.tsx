@@ -5,8 +5,10 @@ import { fetchLiveScores, LiveGame, matchLiveGame } from '../utils/liveScores';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const DOC_ID = 'main'; // single document holding all app data
-const COLLECTION = 'bracketData';
+const DOC_ID = 'main';
+// NEW collection — completely isolated from old 'bracketData' that kept getting overwritten.
+// Nothing in the old code, old scripts, or cached builds knows this name exists.
+const COLLECTION = 'brackets_final_v2';
 
 interface BracketState {
   brackets: Record<string, BracketData>;

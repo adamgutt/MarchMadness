@@ -9,9 +9,10 @@ import { Leaderboard } from './components/Leaderboard';
 import { PersonView } from './components/PersonView';
 import { GradingPage } from './components/GradingPage';
 import { PoolInfo } from './components/PoolInfo';
+import { EspnLeaderboard } from './components/EspnLeaderboard';
 import './App.css';
 
-type Page = 'bracket' | 'leaderboard' | 'person' | 'poolinfo';
+type Page = 'bracket' | 'leaderboard' | 'person' | 'poolinfo' | 'espn';
 
 function CascadingFilter({
   selectedPerson,
@@ -118,6 +119,7 @@ function MainApp() {
     { key: 'bracket', label: 'Bracket' },
     { key: 'leaderboard', label: 'Leaderboard' },
     // { key: 'person', label: 'By Person' },
+    { key: 'espn', label: 'ESPN Standings' },
     { key: 'poolinfo', label: 'Pool Info' },
   ];
 
@@ -176,6 +178,12 @@ function MainApp() {
           {hasBrackets ? <PersonView /> : (
             <div className="empty-state"><h3>Upload brackets first</h3></div>
           )}
+        </div>
+      )}
+
+      {page === 'espn' && (
+        <div className="container">
+          <EspnLeaderboard />
         </div>
       )}
 

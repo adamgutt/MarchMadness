@@ -507,6 +507,29 @@ header p {
 .max-points { color: var(--accent2); font-size: 0.85rem; }
 .champ-col { font-size: 0.8rem; white-space: nowrap; }
 
+/* ===== ESPN Leaderboard ===== */
+.espn-leaderboard { padding: 0 0.5rem; }
+.espn-header { margin-bottom: 1rem; }
+.espn-header h2 { margin: 0 0 0.4rem; font-size: 1.2rem; }
+.espn-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.espn-refresh-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.espn-refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+.espn-eliminated td { opacity: 0.45; }
+
 /* ===== Person View ===== */
 .person-select {
   padding: 0.5rem 1rem;
