@@ -874,8 +874,10 @@ header p {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
   width: 100%;
   position: relative;
 }
@@ -895,7 +897,7 @@ header p {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   flex-wrap: wrap;
 }
 .detail-round {
@@ -955,7 +957,7 @@ header p {
 .detail-matchup {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.5rem;
 }
 .detail-vs {
   text-align: center;
@@ -967,7 +969,7 @@ header p {
   background: #0f1923;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.6rem 0.8rem;
 }
 .detail-team.detail-winner {
   border-color: var(--green);
@@ -977,7 +979,7 @@ header p {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 .detail-seed {
   color: var(--muted);
@@ -985,14 +987,14 @@ header p {
   font-weight: 600;
 }
 .detail-name {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 800;
 }
 .detail-stats {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 .detail-bar-wrap {
   flex: 1;
@@ -1038,8 +1040,8 @@ header p {
 .detail-pickers {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: 0.3rem;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
 }
 .picker-tag {
   background: #253545;
