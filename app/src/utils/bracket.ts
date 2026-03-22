@@ -183,15 +183,16 @@ export function buildFullBracket(
       const accessor = (t: typeof traces[string]) => t.regions[region]?.r64[i] ?? null;
       const topResult = countProjected(g.team1, accessor);
       const bottomResult = countProjected(g.team2, accessor);
+      const [seedA, seedB] = SEED_MATCHUPS[i] || [0, 0];
       return {
         slotId: `${region}_r64_${i}`,
         round: 'Round of 64',
         region,
         position: i,
         topTeam: g.team1,
-        topSeed: g.seed1,
+        topSeed: g.seed1 || seedA.toString(),
         bottomTeam: g.team2,
-        bottomSeed: g.seed2,
+        bottomSeed: g.seed2 || seedB.toString(),
         winner,
         topCount: topResult.count,
         bottomCount: bottomResult.count,
@@ -503,9 +504,10 @@ export function buildPersonBracket(
     const r64: BracketSlot[] = r64Games.map((g, i) => {
       const winner = getWinner(g.team1, g.team2);
       const pick = findPick('Round of 64', region, g.team1, g.team2);
+      const [seedA, seedB] = SEED_MATCHUPS[i] || [0, 0];
       return {
         slotId: `${region}_r64_${i}`, round: 'Round of 64', region, position: i,
-        topTeam: g.team1, topSeed: g.seed1, bottomTeam: g.team2, bottomSeed: g.seed2,
+        topTeam: g.team1, topSeed: g.seed1 || seedA.toString(), bottomTeam: g.team2, bottomSeed: g.seed2 || seedB.toString(),
         winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(g.team1, g.team2, pick),

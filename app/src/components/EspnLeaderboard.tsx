@@ -4,7 +4,10 @@ import { useBrackets } from '../context/BracketContext';
 
 type SortField = 'rank' | 'points' | 'maxPoints' | 'correct' | 'wrong' | 'percentile';
 
-export function EspnLeaderboard() {
+export function EspnLeaderboard({ onViewBracket, onViewEspnBracket }: {
+  onViewBracket?: (name: string) => void;
+  onViewEspnBracket?: (entry: EspnEntry) => void;
+}) {
   const [entries, setEntries] = useState<EspnEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -109,9 +112,9 @@ export function EspnLeaderboard() {
               const rankClass = e.rank === 1 ? 'rank-1' : e.rank === 2 ? 'rank-2' : e.rank === 3 ? 'rank-3' : '';
               const pctStr = e.percentile > 0 ? (e.percentile * 100).toFixed(1) + '%' : '-';
               return (
-                <tr key={`${e.name}-${i}`} className={e.eliminated ? 'espn-eliminated' : ''}>
+                <tr key={`${e.name}-${i}`} className={`${e.eliminated ? 'espn-eliminated' : ''} espn-row-clickable`} onClick={() => onViewEspnBracket?.(e)}>
                   <td className={rankClass}>{e.rank}</td>
-                  <td>{e.name}</td>
+                  <td className="espn-name-cell">{e.name}</td>
                   <td style={{ fontWeight: 700, color: 'var(--accent)' }}>{e.points}</td>
                   <td className="max-points">{e.maxPoints}</td>
                   <td className="champ-col">{e.champion ? `🏆 ${e.champion}` : '-'}</td>
@@ -149,7 +152,15 @@ export function EspnLeaderboard() {
                 return (
                   <tr key={e.name}>
                     <td className={rankClass}>{i + 1}</td>
-                    <td>{e.person} — {e.name}</td>
+                    <td>
+                      {onViewBracket ? (
+                        <button className="link-btn bracket-link" onClick={() => onViewBracket(e.name)}>
+                          {e.person} — {e.name}
+                        </button>
+                      ) : (
+                        <>{e.person} — {e.name}</>
+                      )}
+                    </td>
                     <td style={{ fontWeight: 700, color: 'var(--accent)' }}>{e.points}</td>
                     <td className="max-points">{e.maxPoints}</td>
                     <td className="champ-col">{e.champion ? `🏆 ${e.champion}` : '-'}</td>

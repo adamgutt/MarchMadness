@@ -529,6 +529,21 @@ header p {
 }
 .espn-refresh-btn:hover { border-color: var(--accent); color: var(--text); }
 .espn-eliminated td { opacity: 0.45; }
+.espn-row-clickable { cursor: pointer; }
+.espn-row-clickable:hover td { background: rgba(99, 102, 241, 0.08); }
+.espn-name-cell { color: var(--accent); }
+.espn-bracket-back {
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+}
+.espn-bracket-back .link-btn {
+  font-size: 0.95rem;
+}
+.bracket-link {
+  text-align: left;
+  padding: 0;
+  font-size: inherit;
+}
 
 /* ===== Person View ===== */
 .person-select {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useBrackets } from '../context/BracketContext';
-import { buildFullBracket, buildPersonBracket, RegionBracket } from '../utils/bracket';
+import { buildFullBracket, buildPersonBracket, FullBracket, RegionBracket } from '../utils/bracket';
 import { BracketSlot } from '../types';
 import { normalizeTeamName } from '../utils/csv';
 import { LiveGame, matchLiveGame } from '../utils/liveScores';
@@ -8,12 +8,14 @@ import { LiveGame, matchLiveGame } from '../utils/liveScores';
 interface BracketViewProps {
   selectedBracket: string;
   selectedPerson: string;
+  externalBracket?: FullBracket;
+  externalInfo?: { name: string; detail: string; extra?: string };
 }
 
-export function BracketView({ selectedBracket, selectedPerson }: BracketViewProps) {
+export function BracketView({ selectedBracket, selectedPerson, externalBracket, externalInfo }: BracketViewProps) {
   const { activeBrackets, filteredBrackets, results, entries, liveGames, filteredScores } = useBrackets();
   const [selectedSlot, setSelectedSlot] = useState<BracketSlot | null>(null);
-  const isPersonView = selectedBracket !== '';
+  const isPersonView = selectedBracket !== '' || !!externalBracket;
 
   // When a person is selected but no specific bracket, narrow activeBrackets to just that person's
   const effectiveActive = useMemo(() => {
@@ -29,11 +31,12 @@ export function BracketView({ selectedBracket, selectedPerson }: BracketViewProp
   }, [activeBrackets, entries, selectedPerson]);
 
   const bracket = useMemo(() => {
+    if (externalBracket) return externalBracket;
     if (isPersonView) {
       return buildPersonBracket(selectedBracket, filteredBrackets, results);
     }
     return buildFullBracket(effectiveActive, results, filteredBrackets);
-  }, [effectiveActive, results, filteredBrackets, selectedBracket, isPersonView]);
+  }, [effectiveActive, results, filteredBrackets, selectedBracket, isPersonView, externalBracket]);
 
   // Score for selected person
   const personEntry = isPersonView ? entries.find(e => e.name === selectedBracket) : null;
@@ -55,18 +58,28 @@ export function BracketView({ selectedBracket, selectedPerson }: BracketViewProp
     return { correct, incorrect, pending };
   }, [bracket, isPersonView]);
 
-  if (Object.keys(filteredBrackets).length === 0) {
+  if (!externalBracket && Object.keys(filteredBrackets).length === 0) {
     return <div className="empty-state"><h3>Upload brackets to see the bracket view</h3></div>;
   }
 
   return (
     <div className="bracket-container">
       {/* Person banner when viewing individual bracket */}
-      {isPersonView && personEntry && personStats && (
+      {isPersonView && personStats && (externalInfo || personEntry) && (
         <div className="bracket-selector">
           <div className="person-banner">
-            <span className="person-banner-name">{personEntry.person}</span>
-            <span className="person-banner-bracket">{personEntry.name} ({personEntry.pool})</span>
+            {externalInfo ? (
+              <>
+                <span className="person-banner-name">{externalInfo.name}</span>
+                <span className="person-banner-bracket">{externalInfo.detail}</span>
+                {externalInfo.extra && <span className="person-banner-bracket">{externalInfo.extra}</span>}
+              </>
+            ) : personEntry ? (
+              <>
+                <span className="person-banner-name">{personEntry.person}</span>
+                <span className="person-banner-bracket">{personEntry.name} ({personEntry.pool})</span>
+              </>
+            ) : null}
             <div className="person-banner-stats">
               <span className="pbs correct">{personStats.correct}✓</span>
               <span className="pbs incorrect">{personStats.incorrect}✗</span>

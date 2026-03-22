@@ -9,6 +9,8 @@ import { PersonView } from './components/PersonView';
 import { GradingPage } from './components/GradingPage';
 import { PoolInfo } from './components/PoolInfo';
 import { EspnLeaderboard } from './components/EspnLeaderboard';
+import { EspnBracketView } from './components/EspnBracketView';
+import type { EspnEntry } from './utils/espnLeaderboard';
 import './App.css';
 
 type Page = 'bracket' | 'leaderboard' | 'person' | 'poolinfo' | 'espn';
@@ -104,6 +106,7 @@ function MainApp() {
   const [page, setPage] = useState<Page>('bracket');
   const [selectedPerson, setSelectedPerson] = useState('');
   const [selectedBracket, setSelectedBracket] = useState('');
+  const [espnViewEntry, setEspnViewEntry] = useState<EspnEntry | null>(null);
 
   const handleViewBracket = (bracketName: string) => {
     const entry = entries.find(e => e.name === bracketName);
@@ -180,9 +183,15 @@ function MainApp() {
         </div>
       )}
 
-      {page === 'espn' && (
+      {page === 'espn' && !espnViewEntry && (
         <div className="container">
-          <EspnLeaderboard />
+          <EspnLeaderboard onViewBracket={handleViewBracket} onViewEspnBracket={setEspnViewEntry} />
+        </div>
+      )}
+
+      {page === 'espn' && espnViewEntry && (
+        <div className="page-bracket">
+          <EspnBracketView entry={espnViewEntry} onBack={() => setEspnViewEntry(null)} />
         </div>
       )}
 
