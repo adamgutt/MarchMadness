@@ -1756,7 +1756,7 @@ header p {
 }
 .scenario-lb-row {
   display: grid;
-  grid-template-columns: 45px 1fr 130px 70px 70px;
+  grid-template-columns: 45px 1fr 130px 70px 70px 50px;
   padding: 0.45rem 0.6rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -1798,6 +1798,7 @@ header p {
 }
 .lb-col-score { text-align: right; font-weight: 600; }
 .lb-col-max { text-align: right; color: var(--muted); }
+.lb-col-tb { text-align: right; color: var(--muted); font-size: 0.85rem; }
 
 /* Loading */
 .scenario-loading {
@@ -1810,7 +1811,7 @@ header p {
 /* Mobile */
 @media (max-width: 700px) {
   .scenario-lb-row {
-    grid-template-columns: 30px 1fr 70px 50px 50px;
+    grid-template-columns: 30px 1fr 70px 50px 50px 40px;
     font-size: 0.8rem;
   }
 }

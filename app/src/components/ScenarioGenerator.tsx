@@ -252,7 +252,7 @@ function calcLeaderboard(
         if (team && !eliminated.has(team)) maxPoints += pts;
       }
     }
-    return { name: b.name, champion: b.champion, score, maxPoints, rank: b.rank };
+    return { name: b.name, champion: b.champion, score, maxPoints, rank: b.rank, tiebreaker: b.tiebreaker };
   }).sort((a, b) => b.score - a.score || b.maxPoints - a.maxPoints);
 }
 
@@ -545,6 +545,7 @@ export function ScenarioGenerator() {
             <span className="lb-col-champ">Champion</span>
             <span className="lb-col-score">Score</span>
             <span className="lb-col-max">Max</span>
+            <span className="lb-col-tb">TB</span>
           </div>
           {filtered.slice(0, 100).map((entry, i) => {
             const isAvi = entry.name.toLowerCase().includes('guttman');
@@ -555,6 +556,7 @@ export function ScenarioGenerator() {
                 <span className="lb-col-champ">{entry.champion}</span>
                 <span className="lb-col-score">{entry.score}</span>
                 <span className="lb-col-max">{entry.maxPoints}</span>
+                <span className="lb-col-tb">{entry.tiebreaker}</span>
               </div>
             );
           })}
