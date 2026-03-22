@@ -509,6 +509,8 @@ export function buildPersonBracket(
         winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(g.team1, g.team2, pick),
+        topEliminated: false,
+        bottomEliminated: false,
       };
     });
 
@@ -528,6 +530,8 @@ export function buildPersonBracket(
         topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(topPick, bottomPick, pick),
+        topEliminated: !!topPick && eliminatedTeams.has(norm(topPick)),
+        bottomEliminated: !!bottomPick && eliminatedTeams.has(norm(bottomPick)),
       });
     }
 
@@ -546,6 +550,8 @@ export function buildPersonBracket(
         topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
         personPick: pick,
         pickStatus: getPickStatus(top, bottom, pick),
+        topEliminated: !!top && eliminatedTeams.has(norm(top)),
+        bottomEliminated: !!bottom && eliminatedTeams.has(norm(bottom)),
       });
     }
 
@@ -562,6 +568,8 @@ export function buildPersonBracket(
       winner: e8Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
       personPick: e8Pick,
       pickStatus: getPickStatus(e8Top, e8Bottom, e8Pick),
+      topEliminated: !!e8Top && eliminatedTeams.has(norm(e8Top)),
+      bottomEliminated: !!e8Bottom && eliminatedTeams.has(norm(e8Bottom)),
     }];
 
     return { region, r64, r32, s16, e8 };
@@ -585,6 +593,8 @@ export function buildPersonBracket(
       bottomTeam: ff1Bottom, bottomSeed: getSeedForTeamFromRegion(ff1Bottom, regions[0], regions[1]),
       winner: ff1Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
       personPick: ff1Pick, pickStatus: getPickStatus(ff1Top, ff1Bottom, ff1Pick),
+      topEliminated: !!ff1Top && eliminatedTeams.has(norm(ff1Top)),
+      bottomEliminated: !!ff1Bottom && eliminatedTeams.has(norm(ff1Bottom)),
     },
     {
       slotId: 'ff_1', round: 'Final Four', region: 'West/Midwest', position: 1,
@@ -592,6 +602,8 @@ export function buildPersonBracket(
       bottomTeam: ff2Bottom, bottomSeed: getSeedForTeamFromRegion(ff2Bottom, regions[2], regions[3]),
       winner: ff2Winner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
       personPick: ff2Pick, pickStatus: getPickStatus(ff2Top, ff2Bottom, ff2Pick),
+      topEliminated: !!ff2Top && eliminatedTeams.has(norm(ff2Top)),
+      bottomEliminated: !!ff2Bottom && eliminatedTeams.has(norm(ff2Bottom)),
     },
   ];
 
@@ -607,6 +619,8 @@ export function buildPersonBracket(
     bottomTeam: champBottom, bottomSeed: champBottom ? getSeedForTeamFromRegion(champBottom, ...regions) : '',
     winner: champWinner, topCount: 0, bottomCount: 0, totalBrackets: 0, topPickers: [], bottomPickers: [], eliminatedPickers: [],
     personPick: champPick, pickStatus: getPickStatus(champTop, champBottom, champPick),
+    topEliminated: !!champTop && eliminatedTeams.has(norm(champTop)),
+    bottomEliminated: !!champBottom && eliminatedTeams.has(norm(champBottom)),
   };
 
   return { regions, ff, championship };

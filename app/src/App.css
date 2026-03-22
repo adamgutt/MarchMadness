@@ -1383,6 +1383,22 @@ header p {
 .team-pick-correct .pick-marker { color: var(--green); }
 .team-pick-incorrect .pick-marker { color: var(--red); }
 
+/* Eliminated team strikethrough in person bracket view */
+.team-eliminated .slot-name {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--red);
+  opacity: 0.55;
+  color: var(--red);
+}
+.team-eliminated .slot-seed {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--red);
+  opacity: 0.55;
+  color: var(--red);
+}
+
 .slot-pick-correct {
   border-left: 2px solid var(--green) !important;
 }

@@ -68,4 +68,6 @@ export interface BracketSlot {
   // Individual bracket view
   personPick?: string | null;         // this person's pick for this game
   pickStatus?: 'correct' | 'incorrect' | 'pending' | null;
+  topEliminated?: boolean;   // true if topTeam is already eliminated from the tournament
+  bottomEliminated?: boolean; // true if bottomTeam is already eliminated from the tournament
 }
