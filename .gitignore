@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+app/dist/
+
+# Data dumps & generated output
+*_entry_detail.json
+*_entries*.json
+*_brackets.json
+*_analysis.json
+challenge_data.json
+*.csv
+
+# One-off / exploratory scripts (kept locally, not committed)
+/analyze*.mjs
+/check_*.mjs
+/compare_*.mjs
+/fetch_*.mjs
+/find_*.mjs
+/loss_*.mjs
+/path_to_win*.mjs
+/save_scenarios.mjs
+/scrape_*.mjs
+/test_*.mjs
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

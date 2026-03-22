@@ -9,11 +9,10 @@ import { PersonView } from './components/PersonView';
 import { GradingPage } from './components/GradingPage';
 import { PoolInfo } from './components/PoolInfo';
 import { EspnLeaderboard } from './components/EspnLeaderboard';
-import { EspnBracketView } from './components/EspnBracketView';
-import type { EspnEntry } from './utils/espnLeaderboard';
+import { ScenarioGenerator } from './components/ScenarioGenerator';
 import './App.css';
 
-type Page = 'bracket' | 'leaderboard' | 'person' | 'poolinfo' | 'espn';
+type Page = 'bracket' | 'leaderboard' | 'person' | 'poolinfo' | 'espn' | 'scenarios';
 
 function CascadingFilter({
   selectedPerson,
@@ -106,8 +105,6 @@ function MainApp() {
   const [page, setPage] = useState<Page>('bracket');
   const [selectedPerson, setSelectedPerson] = useState('');
   const [selectedBracket, setSelectedBracket] = useState('');
-  const [espnViewEntry, setEspnViewEntry] = useState<EspnEntry | null>(null);
-
   const handleViewBracket = (bracketName: string) => {
     const entry = entries.find(e => e.name === bracketName);
     if (entry) {
@@ -121,7 +118,8 @@ function MainApp() {
     { key: 'bracket', label: 'Bracket' },
     { key: 'leaderboard', label: 'Leaderboard' },
     // { key: 'person', label: 'By Person' },
-    { key: 'espn', label: 'ESPN Standings' },
+    { key: 'espn', label: 'Mandel Standings' },
+    { key: 'scenarios', label: 'Scenarios' },
     { key: 'poolinfo', label: 'Pool Info' },
   ];
 
@@ -183,15 +181,15 @@ function MainApp() {
         </div>
       )}
 
-      {page === 'espn' && !espnViewEntry && (
+      {page === 'espn' && (
         <div className="container">
-          <EspnLeaderboard onViewBracket={handleViewBracket} onViewEspnBracket={setEspnViewEntry} />
+          <EspnLeaderboard onViewBracket={handleViewBracket} />
         </div>
       )}
 
-      {page === 'espn' && espnViewEntry && (
-        <div className="page-bracket">
-          <EspnBracketView entry={espnViewEntry} onBack={() => setEspnViewEntry(null)} />
+      {page === 'scenarios' && (
+        <div className="container">
+          <ScenarioGenerator />
         </div>
       )}
 
