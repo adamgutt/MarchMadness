@@ -128,7 +128,7 @@ export function BracketView({ selectedBracket, selectedPerson, externalBracket, 
               <span style={{ color: '#999', fontSize: '0.8rem' }}>(loading…)</span>
             ) : (
               <span style={{ color: '#999', fontSize: '0.8rem' }}>
-                ({canWinBrackets.size} of {Object.keys(effectiveActive).length})
+                ({canWinBrackets.size} of 21 mandel brackets)
               </span>
             )}
           </label>

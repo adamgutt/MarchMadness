@@ -83,7 +83,7 @@ export function Leaderboard({ onViewBracket, selectedPerson }: LeaderboardProps)
           Only show brackets that can finish 1st
         </label>
         <span style={{ fontSize: '0.85rem', color: 'var(--text-muted, #888)' }}>
-          {canWinLoading ? 'Computing...' : `${canWinBrackets.size} of ${Object.keys(filteredScores).length} brackets can still win`}
+          {canWinLoading ? 'Computing...' : `${canWinBrackets.size} of 21 Mandel brackets can still win`}
         </span>
       </div>
       <table className="leaderboard-table">
