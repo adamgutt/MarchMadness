@@ -140,7 +140,7 @@ function MainApp() {
         </nav>
       </header>
 
-      {hasBrackets && (
+      {hasBrackets && page !== 'scenarios' && page !== 'espn' && (
         <div className="toolbar">
           <StatsOverview />
           <CascadingFilter
