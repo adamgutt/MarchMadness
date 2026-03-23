@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useBrackets } from '../context/BracketContext';
 import { buildFullBracket, buildPersonBracket, FullBracket, RegionBracket } from '../utils/bracket';
 import { BracketSlot } from '../types';
 import { normalizeTeamName } from '../utils/csv';
 import { LiveGame, matchLiveGame } from '../utils/liveScores';
+import { loadCanWinSet } from '../utils/scenarioRanks';
 
 interface BracketViewProps {
   selectedBracket: string;
@@ -15,7 +16,21 @@ interface BracketViewProps {
 export function BracketView({ selectedBracket, selectedPerson, externalBracket, externalInfo }: BracketViewProps) {
   const { activeBrackets, filteredBrackets, results, entries, liveGames, filteredScores } = useBrackets();
   const [selectedSlot, setSelectedSlot] = useState<BracketSlot | null>(null);
+  const [showOnlyCanWin, setShowOnlyCanWin] = useState(false);
+  const [canWinBrackets, setCanWinBrackets] = useState<Set<string>>(new Set());
+  const [canWinLoading, setCanWinLoading] = useState(true);
   const isPersonView = selectedBracket !== '' || !!externalBracket;
+
+  // Load can-win set
+  const allBracketNames = useMemo(() => Object.keys(activeBrackets), [activeBrackets]);
+  useEffect(() => {
+    if (!allBracketNames.length) { setCanWinLoading(false); return; }
+    setCanWinLoading(true);
+    loadCanWinSet(allBracketNames).then(set => {
+      setCanWinBrackets(set);
+      setCanWinLoading(false);
+    });
+  }, [allBracketNames]);
 
   // When a person is selected but no specific bracket, narrow activeBrackets to just that person's
   const effectiveActive = useMemo(() => {
@@ -30,13 +45,23 @@ export function BracketView({ selectedBracket, selectedPerson, externalBracket, 
     return filtered;
   }, [activeBrackets, entries, selectedPerson]);
 
+  // Further filter to only can-win brackets when toggle is on
+  const displayActive = useMemo(() => {
+    if (!showOnlyCanWin) return effectiveActive;
+    const filtered: Record<string, typeof effectiveActive[string]> = {};
+    for (const [name, data] of Object.entries(effectiveActive)) {
+      if (canWinBrackets.has(name)) filtered[name] = data;
+    }
+    return filtered;
+  }, [effectiveActive, showOnlyCanWin, canWinBrackets]);
+
   const bracket = useMemo(() => {
     if (externalBracket) return externalBracket;
     if (isPersonView) {
       return buildPersonBracket(selectedBracket, filteredBrackets, results);
     }
-    return buildFullBracket(effectiveActive, results, filteredBrackets);
-  }, [effectiveActive, results, filteredBrackets, selectedBracket, isPersonView, externalBracket]);
+    return buildFullBracket(displayActive, results, filteredBrackets);
+  }, [displayActive, results, filteredBrackets, selectedBracket, isPersonView, externalBracket]);
 
   // Score for selected person
   const personEntry = isPersonView ? entries.find(e => e.name === selectedBracket) : null;
@@ -86,6 +111,27 @@ export function BracketView({ selectedBracket, selectedPerson, externalBracket, 
               <span className="pbs pending">{personStats.pending}?</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Can-win filter (aggregate view only) */}
+      {!isPersonView && (
+        <div className="can-win-filter" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>
+            <input
+              type="checkbox"
+              checked={showOnlyCanWin}
+              onChange={() => setShowOnlyCanWin(v => !v)}
+            />
+            Only brackets that can finish 1st
+            {canWinLoading ? (
+              <span style={{ color: '#999', fontSize: '0.8rem' }}>(loading…)</span>
+            ) : (
+              <span style={{ color: '#999', fontSize: '0.8rem' }}>
+                ({canWinBrackets.size} of {Object.keys(effectiveActive).length})
+              </span>
+            )}
+          </label>
         </div>
       )}
 

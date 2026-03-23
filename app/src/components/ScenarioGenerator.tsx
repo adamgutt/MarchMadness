@@ -1,35 +1,13 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { fetchLiveResults } from '../utils/liveResults';
 import { useBrackets } from '../context/BracketContext';
+import {
+  type TournamentGame, type CompactBracket,
+  loadScenarioData, buildOutcomeNameMap, mergeGamesWithLive,
+  calcLeaderboard, calcBestRanks,
+} from '../utils/scenarioRanks';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-
-interface Outcome { id: string; name: string; }
-
-interface TournamentGame {
-  propId: string;
-  period: number;
-  round: string;
-  regionIdx: number;
-  region: string;
-  position: number;
-  outcomes: Outcome[];
-  seed1: string;
-  seed2: string;
-  winnerOutcomeId: string | null;
-  concluded: boolean;
-}
-
-interface CompactBracket {
-  id: string;
-  name: string;
-  champion: string;
-  tiebreaker: number;
-  rank: number;
-  picks: Record<string, string>;
-}
 
 interface TreeSlot {
   game: TournamentGame;
@@ -47,40 +25,10 @@ interface TreeSlot {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const POINTS: Record<number, number> = { 1: 10, 2: 20, 3: 40, 4: 80, 5: 160, 6: 320 };
 const REGIONS = ['East', 'South', 'West', 'Midwest'];
 const SEED_MATCHUPS = [[1,16],[8,9],[5,12],[4,13],[6,11],[3,14],[7,10],[2,15]];
 
-// ── Data Loading ───────────────────────────────────────────────────────────────
-
-async function loadScenarioData() {
-  const [tournamentSnap, metaSnap] = await Promise.all([
-    getDoc(doc(db, 'scenario_data', 'tournament')),
-    getDoc(doc(db, 'scenario_data', 'meta')),
-  ]);
-  if (!tournamentSnap.exists() || !metaSnap.exists()) return null;
-
-  const games = tournamentSnap.data().games as TournamentGame[];
-  const totalBatches = (metaSnap.data() as { totalBatches: number }).totalBatches;
-
-  const batchSnaps = await Promise.all(
-    Array.from({ length: totalBatches }, (_, i) => getDoc(doc(db, 'scenario_data', `picks_${i}`)))
-  );
-  const brackets: CompactBracket[] = [];
-  for (const snap of batchSnaps) {
-    if (snap.exists()) brackets.push(...(snap.data().brackets as CompactBracket[]));
-  }
-
-  return { games, brackets };
-}
-
 // ── Bracket Tree ───────────────────────────────────────────────────────────────
-
-function buildOutcomeNameMap(games: TournamentGame[]) {
-  const map: Record<string, string> = {};
-  for (const g of games) for (const o of g.outcomes) map[o.id] = o.name;
-  return map;
-}
 
 type RegionTree = { name: string; r64: TreeSlot[]; r32: TreeSlot[]; s16: TreeSlot[]; e8: TreeSlot[] };
 
@@ -209,53 +157,6 @@ function buildTree(games: TournamentGame[], userWinners: Record<string, string>,
   return { regions, ff, championship };
 }
 
-// ── Score Calculation ──────────────────────────────────────────────────────────
-
-function calcLeaderboard(
-  games: TournamentGame[],
-  brackets: CompactBracket[],
-  userWinners: Record<string, string>,
-  outcomeNames: Record<string, string>,
-) {
-  const allWinners: Record<string, string> = {};
-  for (const g of games) {
-    if (g.concluded && g.winnerOutcomeId) allWinners[g.propId] = g.winnerOutcomeId;
-    else if (userWinners[g.propId]) allWinners[g.propId] = userWinners[g.propId];
-  }
-
-  // Track eliminated teams round-by-round
-  const eliminated = new Set<string>();
-  for (let period = 1; period <= 6; period++) {
-    for (const g of games) {
-      if (g.period !== period) continue;
-      const wId = allWinners[g.propId];
-      if (!wId) continue;
-      for (const o of g.outcomes) {
-        if (o.id !== wId && !eliminated.has(o.name.toLowerCase().trim())) {
-          eliminated.add(o.name.toLowerCase().trim());
-        }
-      }
-    }
-  }
-
-  return brackets.map(b => {
-    let score = 0, maxPoints = 0;
-    for (const g of games) {
-      const pick = b.picks[g.propId];
-      if (!pick) continue;
-      const pts = POINTS[g.period] || 0;
-      const wId = allWinners[g.propId];
-      if (wId) {
-        if (pick === wId) { score += pts; maxPoints += pts; }
-      } else {
-        const team = outcomeNames[pick]?.toLowerCase().trim();
-        if (team && !eliminated.has(team)) maxPoints += pts;
-      }
-    }
-    return { name: b.name, champion: b.champion, score, maxPoints, rank: b.rank, tiebreaker: b.tiebreaker };
-  }).sort((a, b) => b.score - a.score || b.maxPoints - a.maxPoints);
-}
-
 // ── Downstream clearing ────────────────────────────────────────────────────────
 
 function clearDownstream(propId: string, winners: Record<string, string>, games: TournamentGame[], outcomeNames: Record<string, string>) {
@@ -327,17 +228,6 @@ export function ScenarioGenerator() {
   const [selectedPrefill, setSelectedPrefill] = useState('');
   const gamesRef = useRef<TournamentGame[]>([]);
 
-  // Merge live ESPN results into the games array
-  const mergeResults = useCallback((baseGames: TournamentGame[], liveResults: Record<string, string>) => {
-    return baseGames.map(g => {
-      const liveWinner = liveResults[g.propId];
-      if (liveWinner) {
-        return { ...g, concluded: true, winnerOutcomeId: liveWinner };
-      }
-      return g;
-    });
-  }, []);
-
   // Clean up userWinners when games change (e.g., new game concludes):
   // 1. Remove picks for now-concluded games (actual result takes over)
   // 2. Remove picks for eliminated teams in later rounds
@@ -376,23 +266,21 @@ export function ScenarioGenerator() {
     let interval: ReturnType<typeof setInterval>;
     loadScenarioData().then(async data => {
       if (data) {
-        // Fetch live results and merge with Firebase data
         try {
           const live = await fetchLiveResults();
-          const merged = mergeResults(data.games, live);
+          const merged = mergeGamesWithLive(data.games, live);
           setGames(merged);
-          gamesRef.current = data.games; // keep raw games for re-merging on poll
+          gamesRef.current = data.games;
         } catch {
           setGames(data.games);
           gamesRef.current = data.games;
         }
         setBrackets(data.brackets);
 
-        // Poll for live updates every 30 seconds
         interval = setInterval(async () => {
           try {
             const live = await fetchLiveResults();
-            const merged = mergeResults(gamesRef.current, live);
+            const merged = mergeGamesWithLive(gamesRef.current, live);
             setGames(merged);
           } catch { /* silent */ }
         }, 30000);
@@ -400,7 +288,7 @@ export function ScenarioGenerator() {
       setLoading(false);
     });
     return () => { if (interval) clearInterval(interval); };
-  }, [mergeResults]);
+  }, []);
 
   const outcomeNames = useMemo(() => buildOutcomeNameMap(games), [games]);
 
@@ -412,20 +300,37 @@ export function ScenarioGenerator() {
       .sort((a, b) => `${a.person} ${a.name}`.localeCompare(`${b.person} ${b.name}`))
   , [bracketEntries]);
 
-  // Prefill user picks from a Mandel bracket
+  // Best possible rank for each Mandel bracket (dream scenario simulation)
+  const bestRanks = useMemo(() => {
+    if (!games.length || !brackets.length || !mandelEntries.length) return {};
+    return calcBestRanks(games, brackets, mandelEntries.map(e => e.name), outcomeNames);
+  }, [games, brackets, mandelEntries, outcomeNames]);
+
+  // Prefill user picks from a Mandel bracket's best-case (dream) scenario
   const handlePrefill = useCallback((bracketName: string) => {
     setSelectedPrefill(bracketName);
     if (!bracketName) { setUserWinners({}); return; }
+
+    // Use the pre-computed dream scenario to fill ALL remaining games (no TBDs)
+    const bestInfo = bestRanks[bracketName];
+    if (bestInfo?.dreamWinners) {
+      const prefilled: Record<string, string> = {};
+      for (const g of games) {
+        if (g.concluded) continue;
+        const dw = bestInfo.dreamWinners[g.propId];
+        if (dw) prefilled[g.propId] = dw;
+      }
+      setUserWinners(prefilled);
+      return;
+    }
+
+    // Fallback: just prefill bracket's own alive picks
     const match = brackets.find(b => b.name.toLowerCase().trim() === bracketName.toLowerCase().trim());
     if (!match) return;
-
-    // Build outcome name lookup: outcomeId -> team name (lowercase)
     const oidToName: Record<string, string> = {};
     for (const g of games) {
       for (const o of g.outcomes) oidToName[o.id] = o.name.toLowerCase().trim();
     }
-
-    // Build set of eliminated team NAMES from concluded games
     const eliminatedNames = new Set<string>();
     for (const g of games) {
       if (!g.concluded || !g.winnerOutcomeId) continue;
@@ -433,8 +338,6 @@ export function ScenarioGenerator() {
         if (o.id !== g.winnerOutcomeId) eliminatedNames.add(o.name.toLowerCase().trim());
       }
     }
-
-    // Only prefill picks where the picked team hasn't been eliminated
     const prefilled: Record<string, string> = {};
     const sorted = [...games].sort((a, b) => a.period - b.period);
     for (const g of sorted) {
@@ -446,7 +349,7 @@ export function ScenarioGenerator() {
       prefilled[g.propId] = pick;
     }
     setUserWinners(prefilled);
-  }, [brackets, games]);
+  }, [bestRanks, brackets, games]);
 
   const handlePick = useCallback((propId: string, outcomeId: string) => {
     setUserWinners(prev => {
@@ -498,9 +401,11 @@ export function ScenarioGenerator() {
           onChange={e => handlePrefill(e.target.value)}
         >
           <option value="">Prefill from bracket...</option>
-          {mandelEntries.map(e => (
-            <option key={e.name} value={e.name}>{e.person} — {e.name}</option>
-          ))}
+          {mandelEntries.map(e => {
+            const best = bestRanks[e.name]?.rank;
+            const tag = best ? ` (Best: #${best})` : '';
+            return <option key={e.name} value={e.name}>{e.person} — {e.name}{tag}</option>;
+          })}
         </select>
         <button className="btn btn-scenario-reset" onClick={() => { setUserWinners({}); setSelectedPrefill(''); }}>Reset All</button>
         <div className="scenario-counts">
